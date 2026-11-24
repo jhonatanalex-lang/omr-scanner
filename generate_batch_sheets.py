@@ -195,18 +195,20 @@ def draw_single_omr_page(c, sheet_code, sheet_id_number, coords_cache=None, logo
     c.setFont("Helvetica-Bold", 6.8)
     c.drawCentredString(box_x + box_w / 2.0, cur_y + 1.2 * MM, "NÚMERO DE DNI")
     
-    dni_base_x = box_x + 1.0 * MM
-    col_w = 6.8 * MM
+    col_w = 7.0 * MM
     row_h = 5.8 * MM
+    write_box_w = 6.0 * MM
+    write_box_h = 5.8 * MM
     write_box_y = cur_y - 6.5 * MM
+    box_center_x = box_x + box_w / 2.0
     
     c.setStrokeColor(COLOR_UNSAAC_MEDIUM)
     c.setFillColor(colors.black)
     c.setFont("Helvetica-Bold", 6.2)
     
     for col in range(8):
-        cx = dni_base_x + col * col_w
-        c.roundRect(cx - 2.8 * MM, write_box_y, 5.6 * MM, 5.8 * MM, 1.0 * MM, stroke=1, fill=0)
+        cx = box_center_x + (col - 3.5) * col_w
+        c.roundRect(cx - write_box_w / 2.0, write_box_y, write_box_w, write_box_h, 1.0 * MM, stroke=1, fill=0)
         
         for val in range(10):
             cy = (write_box_y - 4.8 * MM) - (val * row_h)
