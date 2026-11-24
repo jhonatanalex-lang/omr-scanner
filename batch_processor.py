@@ -151,6 +151,69 @@ class OMRBatchProcessor:
         conn.close()
         return results
 
+    def export_to_excel(self, output_excel="resultados_examen.xlsx"):
+        """Exporta los resultados consolidados a un archivo Excel (.xlsx) con formato profesional."""
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT sheet_code, student_id, correct_count, incorrect_count, blank_count, final_score, status
+            FROM graded_results
+            ORDER BY final_score DESC
+        """)
+        rows = cur.fetchall()
+        conn.close()
+        
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Resultados OMR"
+        
+        # Estilos de cabecera
+        header_fill = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+        header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+        center_align = Alignment(horizontal="center", vertical="center")
+        thin_border = Border(
+            left=Side(style='thin', color='D9D9D9'),
+            right=Side(style='thin', color='D9D9D9'),
+            top=Side(style='thin', color='D9D9D9'),
+            bottom=Side(style='thin', color='D9D9D9')
+        )
+        
+        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Correctas", "Incorrectas", "En Blanco", "Nota Final", "Estado"]
+        ws.append(headers)
+        
+        for col_num in range(1, len(headers) + 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+            
+        for idx, row in enumerate(rows, start=1):
+            sheet_code, student_id, correct, incorrect, blank, score, status = row
+            data_row = [idx, sheet_code, student_id, correct, incorrect, blank, score, status]
+            ws.append(data_row)
+            
+            row_num = idx + 1
+            for col_num in range(1, len(data_row) + 1):
+                cell = ws.cell(row=row_num, column=col_num)
+                cell.alignment = center_align
+                cell.border = thin_border
+                if col_num == 7: # Nota
+                    cell.font = Font(bold=True)
+                    
+        # Autoajustar anchos de columna
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = openpyxl.utils.get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+            
+        wb.save(output_excel)
+        print(f"✅ Resultados exportados exitosamente a: {output_excel}")
+        return output_excel
+
     def rasterize_pdf_page(self, pdf_path, page_num=0, dpi=300):
         """Convierte una página de PDF a imagen OpenCV (numpy array)."""
         doc = fitz.open(pdf_path)

@@ -10,6 +10,7 @@ import os
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
+from reportlab.graphics.barcode import code128
 
 # Dimensiones en puntos (1 pulgada = 72 pt, 1 mm = 72 / 25.4 pt)
 MM = 72.0 / 25.4
@@ -64,9 +65,11 @@ def generate_omr_sheet(output_pdf="omr_sheet_master.pdf", output_json="template_
     c.setFont("Helvetica", 8)
     c.drawString(left_x_min + 12 * MM, left_y_max - 11 * MM, "Llene completamente los círculos con lápiz 2B")
     
-    # Código de Enlace en Identificación
-    c.setFont("Helvetica-Bold", 9)
-    c.drawRightString(left_x_max - 12 * MM, left_y_max - 7 * MM, f"CÓDIGO: {sheet_code}")
+    # Código de Enlace en Identificación (Texto + Código de Barras Code128)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawRightString(left_x_max - 12 * MM, left_y_max - 5 * MM, f"CÓDIGO: {sheet_code}")
+    barcode_id = code128.Code128(sheet_code, barHeight=7 * MM, barWidth=1.0, quiet=1)
+    barcode_id.drawOn(c, left_x_max - 60 * MM, left_y_max - 14 * MM)
     
     # Bloque de datos escritos
     c.setStrokeColor(colors.black)
@@ -132,11 +135,13 @@ def generate_omr_sheet(output_pdf="omr_sheet_master.pdf", output_json="template_
     ans_ref_w = (right_x_max - MARKER_SIZE / 2.0) - ans_ref_x0
     ans_ref_h = (right_y_max - MARKER_SIZE / 2.0) - ans_ref_y0
     
-    # Encabezado Respuestas
+    # Encabezado Respuestas (Texto + Código de Barras Code128)
     c.setFont("Helvetica-Bold", 12)
     c.drawString(right_x_min + 12 * MM, right_y_max - 7 * MM, "HOJA DE RESPUESTAS")
-    c.setFont("Helvetica-Bold", 9)
-    c.drawRightString(right_x_max - 12 * MM, right_y_max - 7 * MM, f"CÓDIGO: {sheet_code}")
+    c.setFont("Helvetica-Bold", 8)
+    c.drawRightString(right_x_max - 12 * MM, right_y_max - 5 * MM, f"CÓDIGO: {sheet_code}")
+    barcode_ans = code128.Code128(sheet_code, barHeight=7 * MM, barWidth=1.0, quiet=1)
+    barcode_ans.drawOn(c, right_x_max - 60 * MM, right_y_max - 14 * MM)
     
     # Columnas de Preguntas (Ejemplo: 40 Preguntas en 2 columnas de 20)
     options = ['A', 'B', 'C', 'D', 'E']
