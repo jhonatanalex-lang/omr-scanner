@@ -50,6 +50,7 @@ class OMRBatchProcessor:
             CREATE TABLE IF NOT EXISTS graded_results (
                 sheet_code TEXT PRIMARY KEY,
                 student_id TEXT,
+                theme TEXT,
                 correct_count INTEGER,
                 incorrect_count INTEGER,
                 blank_count INTEGER,
@@ -80,15 +81,18 @@ class OMRBatchProcessor:
         conn.commit()
         conn.close()
 
-    def reconcile_and_grade(self, answer_key, score_correct=1.0, score_incorrect=-0.25):
+    def reconcile_and_grade(self, answer_keys, score_correct=1.0, score_incorrect=-0.25):
         """
         Realiza el JOIN relacional entre Identificación y Respuestas,
-        calcula la nota y detecta fichas huérfanas.
+        detecta el tema del examen (P, Q, R, S, T, U) y califica contra la clave respectiva.
+        answer_keys puede ser:
+          - Un dict simple { "Q01": "A", ... } (clave única para todos los temas).
+          - Un dict multi-tema { "P": {...}, "Q": {...}, ... }
         """
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         
-        # Consulta de conciliación FULL OUTER (simulada en SQLite vía LEFT + UNION)
+        # Consulta de conciliación FULL OUTER
         query = """
             SELECT 
                 COALESCE(a.sheet_code, i.sheet_code) AS sheet_code,
@@ -111,16 +115,30 @@ class OMRBatchProcessor:
         for sheet_code, student_id, answers_json in rows:
             if not student_id:
                 status = "ORPHAN_ANSWERS (Falta ficha de datos)"
+                theme = "N/A"
                 correct, incorrect, blank, score = 0, 0, 0, 0.0
             elif not answers_json:
                 status = "ORPHAN_IDENTIFICATION (Falta ficha de respuestas)"
+                theme = "N/A"
                 correct, incorrect, blank, score = 0, 0, 0, 0.0
             else:
-                status = "MATCHED (Calificada)"
                 answers = json.loads(answers_json)
+                theme = answers.get("_THEME_", "SIN_TEMA")
+                
+                # Seleccionar la clave correspondiente según el tema
+                if isinstance(answer_keys, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in answer_keys.keys()):
+                    target_key = answer_keys.get(theme)
+                    if not target_key:
+                        target_key = answer_keys.get("P") or list(answer_keys.values())[0]
+                else:
+                    target_key = answer_keys
+                    
+                status = "MATCHED (Calificada)"
                 correct, incorrect, blank = 0, 0, 0
                 
-                for q_key, correct_val in answer_key.items():
+                for q_key, correct_val in target_key.items():
+                    if q_key.startswith("_"): # Ignorar metadatos
+                        continue
                     student_val = answers.get(q_key, "BLANK")
                     if student_val == correct_val:
                         correct += 1
@@ -133,13 +151,14 @@ class OMRBatchProcessor:
                 
             cur.execute("""
                 INSERT OR REPLACE INTO graded_results 
-                (sheet_code, student_id, correct_count, incorrect_count, blank_count, final_score, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (sheet_code, student_id or "UNKNOWN", correct, incorrect, blank, score, status))
+                (sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, final_score, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (sheet_code, student_id or "UNKNOWN", theme, correct, incorrect, blank, score, status))
             
             results.append({
                 "sheet_code": sheet_code,
                 "student_id": student_id or "DESCONOCIDO",
+                "theme": theme,
                 "status": status,
                 "score": score,
                 "correct": correct,
@@ -159,7 +178,7 @@ class OMRBatchProcessor:
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
-            SELECT sheet_code, student_id, correct_count, incorrect_count, blank_count, final_score, status
+            SELECT sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, final_score, status
             FROM graded_results
             ORDER BY final_score DESC
         """)
@@ -181,7 +200,7 @@ class OMRBatchProcessor:
             bottom=Side(style='thin', color='D9D9D9')
         )
         
-        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Correctas", "Incorrectas", "En Blanco", "Nota Final", "Estado"]
+        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Tema", "Correctas", "Incorrectas", "En Blanco", "Nota Final", "Estado"]
         ws.append(headers)
         
         for col_num in range(1, len(headers) + 1):
@@ -192,8 +211,8 @@ class OMRBatchProcessor:
             cell.border = thin_border
             
         for idx, row in enumerate(rows, start=1):
-            sheet_code, student_id, correct, incorrect, blank, score, status = row
-            data_row = [idx, sheet_code, student_id, correct, incorrect, blank, score, status]
+            sheet_code, student_id, theme, correct, incorrect, blank, score, status = row
+            data_row = [idx, sheet_code, student_id, theme or "N/A", correct, incorrect, blank, score, status]
             ws.append(data_row)
             
             row_num = idx + 1
@@ -201,7 +220,7 @@ class OMRBatchProcessor:
                 cell = ws.cell(row=row_num, column=col_num)
                 cell.alignment = center_align
                 cell.border = thin_border
-                if col_num == 7: # Nota
+                if col_num == 8: # Nota
                     cell.font = Font(bold=True)
                     
         # Autoajustar anchos de columna

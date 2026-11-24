@@ -79,8 +79,9 @@ class OMRApp:
         self.incorrect_score_var = tk.StringVar(value="-0.25")
         ttk.Entry(row1, textvariable=self.incorrect_score_var, width=6).pack(side=tk.LEFT, padx=(0, 15))
 
-        self.quick_key_btn = ttk.Button(row1, text="Cargar Clave 80 Preguntas", command=self.load_sample_key)
-        self.quick_key_btn.pack(side=tk.LEFT)
+        self.key_status_var = tk.StringVar(value="Claves cargadas: P, Q, R, S, T, U (80 Preguntas)")
+        ttk.Button(row1, text="⚙️ Administrar Claves Multitema...", command=self.open_multitheme_dialog).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(row1, textvariable=self.key_status_var, font=("Segoe UI", 8, "italic"), foreground="#1F4E79").pack(side=tk.LEFT)
 
         # Panel 2: Archivo Escaneado
         batch_frame = ttk.LabelFrame(parent, text=" 2. Ingesta de Fichas Escaneadas (PDF o Imágenes) ", padding=10)
@@ -105,11 +106,12 @@ class OMRApp:
         results_frame = ttk.LabelFrame(parent, text=" 3. Resultados Consolidados ", padding=10)
         results_frame.pack(fill=tk.BOTH, expand=True)
 
-        columns = ("pos", "code", "dni", "correct", "incorrect", "blank", "score", "status")
+        columns = ("pos", "code", "dni", "theme", "correct", "incorrect", "blank", "score", "status")
         self.tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=7)
         self.tree.heading("pos", text="#")
         self.tree.heading("code", text="Código Hoja")
         self.tree.heading("dni", text="DNI / Estudiante")
+        self.tree.heading("theme", text="Tema")
         self.tree.heading("correct", text="Correctas")
         self.tree.heading("incorrect", text="Incorrectas")
         self.tree.heading("blank", text="En Blanco")
@@ -119,9 +121,10 @@ class OMRApp:
         self.tree.column("pos", width=35, anchor="center")
         self.tree.column("code", width=110, anchor="center")
         self.tree.column("dni", width=110, anchor="center")
-        self.tree.column("correct", width=75, anchor="center")
-        self.tree.column("incorrect", width=75, anchor="center")
-        self.tree.column("blank", width=75, anchor="center")
+        self.tree.column("theme", width=55, anchor="center")
+        self.tree.column("correct", width=70, anchor="center")
+        self.tree.column("incorrect", width=70, anchor="center")
+        self.tree.column("blank", width=70, anchor="center")
         self.tree.column("score", width=80, anchor="center")
         self.tree.column("status", width=160, anchor="center")
 
@@ -172,8 +175,81 @@ class OMRApp:
         self.generate_btn.pack(side=tk.LEFT)
 
     def load_sample_key(self):
-        self.teacher_key = {f"Q{i:02d}": ['A', 'B', 'C', 'D', 'E'][(i - 1) % 5] for i in range(1, 81)}
-        messagebox.showinfo("Clave Cargada", "Se ha cargado la clave de respuestas para 80 preguntas.")
+        # Generar claves multitema automáticas para P, Q, R, S, T, U
+        opts = ['A', 'B', 'C', 'D', 'E']
+        self.multitheme_keys = {}
+        for idx, t in enumerate(['P', 'Q', 'R', 'S', 'T', 'U']):
+            # Desplazar cíclicamente para que cada tema tenga una clave diferente
+            self.multitheme_keys[t] = {
+                f"Q{i:02d}": opts[(i - 1 + idx) % 5] for i in range(1, 81)
+            }
+        self.teacher_key = self.multitheme_keys
+
+    def open_multitheme_dialog(self):
+        if not hasattr(self, "multitheme_keys"):
+            self.load_sample_key()
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Administrador de Claves Multitema (P, Q, R, S, T, U)")
+        dialog.geometry("520x420")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        top_info = ttk.Label(
+            dialog, 
+            text="Selecciona el Tema y edita la clave de respuestas.\n"
+                 "El motor OMR evaluará a cada estudiante según el tema que haya marcado.",
+            font=("Segoe UI", 9)
+        )
+        top_info.pack(padx=15, pady=10, anchor="w")
+
+        selector_frame = ttk.Frame(dialog)
+        selector_frame.pack(fill=tk.X, padx=15, pady=5)
+
+        ttk.Label(selector_frame, text="Tema a configurar:").pack(side=tk.LEFT, padx=(0, 10))
+        theme_combo = ttk.Combobox(selector_frame, values=['P', 'Q', 'R', 'S', 'T', 'U'], state="readonly", width=6)
+        theme_combo.set('P')
+        theme_combo.pack(side=tk.LEFT)
+
+        text_frame = ttk.Frame(dialog)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=10)
+
+        txt_keys = tk.Text(text_frame, wrap="none", font=("Consolas", 10))
+        txt_scroll = ttk.Scrollbar(text_frame, orient=tk.VERTICAL, command=txt_keys.yview)
+        txt_keys.configure(yscrollcommand=txt_scroll.set)
+        txt_keys.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        txt_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        def display_theme_keys(event=None):
+            t = theme_combo.get()
+            k_dict = self.multitheme_keys.get(t, {})
+            lines = [f"{q}={opt}" for q, opt in sorted(k_dict.items())]
+            txt_keys.delete("1.0", tk.END)
+            txt_keys.insert(tk.END, "\n".join(lines))
+
+        theme_combo.bind("<<ComboboxSelected>>", display_theme_keys)
+        display_theme_keys()
+
+        def save_current_theme():
+            t = theme_combo.get()
+            content = txt_keys.get("1.0", tk.END).strip().splitlines()
+            new_dict = {}
+            for line in content:
+                if "=" in line:
+                    q, opt = line.split("=", 1)
+                    q = q.strip().upper()
+                    opt = opt.strip().upper()
+                    if opt in ['A', 'B', 'C', 'D', 'E']:
+                        new_dict[q] = opt
+            if len(new_dict) > 0:
+                self.multitheme_keys[t] = new_dict
+                self.teacher_key = self.multitheme_keys
+                messagebox.showinfo("Guardado", f"Clave para Tema {t} guardada exitosamente ({len(new_dict)} preguntas).", parent=dialog)
+
+        btn_row = ttk.Frame(dialog)
+        btn_row.pack(fill=tk.X, padx=15, pady=(0, 15))
+        ttk.Button(btn_row, text="💾 Guardar Cambios para este Tema", command=save_current_theme).pack(side=tk.LEFT)
+        ttk.Button(btn_row, text="Cerrar", command=dialog.destroy).pack(side=tk.RIGHT)
 
     def browse_pdf(self):
         filename = filedialog.askopenfilename(
@@ -220,7 +296,7 @@ class OMRApp:
             
         for idx, r in enumerate(results, start=1):
             self.tree.insert("", tk.END, values=(
-                idx, r["sheet_code"], r["student_id"],
+                idx, r["sheet_code"], r["student_id"], r.get("theme", "N/A"),
                 r["correct"], r["incorrect"], r["blank"],
                 r["score"], r["status"]
             ))

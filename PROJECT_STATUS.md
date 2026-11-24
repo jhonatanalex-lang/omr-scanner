@@ -36,14 +36,23 @@ Sistema integral de grado de producción para el diseño, generación masiva ser
 
 ---
 
+## 🧩 Calificación Multitema Automática (P, Q, R, S, T, U)
+- El motor clasificador detecta automáticamente qué tema rellenó el postulante.
+- Si el alumno marcó `R`, el sistema evalúa sus respuestas contra la clave del Tema `R`.
+- Administrador gráfico integrado en la App para ver y editar las claves de cada uno de los 6 temas de forma independiente.
+- Las actas de notas en Excel y SQLite registran la columna `Tema` para auditoría transparente.
+
+---
+
 ## 💻 Aplicación de Escritorio Interactiva (`app_gui.py`)
 La aplicación cuenta ahora con dos pestañas de trabajo:
 1. **📊 Calificar Exámenes:**
-   - Permite cargar clave para 80 preguntas.
-   - Procesar PDF o imágenes escaneadas en lote.
-   - Tabla de resultados en vivo y exportación a Excel (.xlsx).
+   - Botón *"⚙️ Administrar Claves Multitema..."* con editor visual para los 6 temas.
+   - Puntuación por acierto y penalidad configurable.
+   - Procesamiento en lote de PDFs con barra de progreso.
+   - Tabla interactiva con columna `Tema` y exportación a Excel (.xlsx).
 2. **🖨️ Generar Hojas para Imprenta:**
-   - Interfaz visual para ingresar el prefijo, número inicial y cantidad de hojas a generar.
+   - Interfaz visual para ingresar prefijo, correlativo inicial y cantidad de hojas a generar.
    - Barra de progreso interactiva y guardado del PDF para imprenta.
 
 Ejecutable mediante:
