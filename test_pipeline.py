@@ -1,13 +1,13 @@
 """
-Test de Integración Integral para Ficha Oficial de 80 Preguntas:
-  1. Rasteriza la plantilla maestra de 80 preguntas (omr_sheet_master.pdf).
+Test de Integración para Ficha Oficial Optimizada (30/70):
+  1. Rasteriza omr_sheet_master.pdf a 300 DPI.
   2. Simula:
-     - DNI del alumno: '46291035'
-     - Tipo de Examen / Tema marcado: 'Q'
-     - 80 Preguntas marcadas con un patrón conocido (A, B, C, D, E cíclico).
-  3. Desglose en dos mitades independientes.
-  4. Decodificación de código de barras Code128 de enlace unívoco.
-  5. Calificación contra la clave del Tema 'Q'.
+     - DNI del alumno: '72910483'
+     - Tema: 'R'
+     - 80 Preguntas marcadas.
+  3. Desglose en dos mitades (30% vs 70%).
+  4. Verificación de marcadores fiduciarios (que el código de barras no interfiera).
+  5. Calificación y generación de reporte.
 """
 
 import cv2
@@ -18,28 +18,28 @@ import pyzbar.pyzbar as pyzbar
 from omr_core import OMREngine
 from batch_processor import OMRBatchProcessor
 
-def run_test_80():
+def run_test_30_70():
     processor = OMRBatchProcessor(db_path="test_results.db")
     engine = OMREngine(template_json_path="template_coords.json")
     
-    print("1. Rasterizando la ficha oficial de 80 preguntas (300 DPI)...")
+    print("1. Rasterizando la ficha oficial 30/70 (300 DPI)...")
     img_bgr = processor.rasterize_pdf_page("omr_sheet_master.pdf", dpi=300)
     h, w = img_bgr.shape[:2]
-    print(f"   Dimensiones de la imagen: {w}x{h} px")
+    print(f"   Dimensiones de la imagen A4: {w}x{h} px")
     
     with open("template_coords.json", "r") as f:
         tpl = json.load(f)
         
     simulated_img = img_bgr.copy()
     
-    # Parámetros geométricos en mm para la simulación
-    # Left Section: x: [10mm, 143.5mm], y: [10mm, 200mm], Marker size: 7.5mm
-    left_x0 = ((10.0 + 3.75) / 297.0) * w
-    left_y0 = ((10.0 + 3.75) / 210.0) * h
-    left_ref_w = ((143.5 - 3.75 - 10.0 - 3.75) / 297.0) * w
-    left_ref_h = ((200.0 - 3.75 - 10.0 - 3.75) / 210.0) * h
+    # Parámetros geométricos en mm para la simulación:
+    # Left Section: x: [8mm, 91mm], y: [8mm, 202mm], Marker size: 7.5mm
+    left_x0 = ((8.0 + 3.75) / 297.0) * w
+    left_y0 = ((8.0 + 3.75) / 210.0) * h
+    left_ref_w = ((91.0 - 3.75 - 8.0 - 3.75) / 297.0) * w
+    left_ref_h = ((202.0 - 3.75 - 8.0 - 3.75) / 210.0) * h
     
-    student_dni = "46291035"
+    student_dni = "72910483"
     print(f"2. Simulando llenado de DNI: {student_dni}...")
     id_bubbles = tpl["sections"]["identification"]["bubbles"]
     for char_idx, char_val in enumerate(student_dni):
@@ -50,14 +50,14 @@ def run_test_80():
                 by = int(h - (left_y0 + b["norm_y"] * left_ref_h))
                 cv2.circle(simulated_img, (bx, by), int(w * 0.0055), (30, 30, 30), -1)
                 
-    # Right Section: x: [153.5mm, 287mm], y: [10mm, 200mm], Marker size: 7.5mm
-    right_x0 = ((153.5 + 3.75) / 297.0) * w
-    right_y0 = ((10.0 + 3.75) / 210.0) * h
-    right_ref_w = ((287.0 - 3.75 - 153.5 - 3.75) / 297.0) * w
-    right_ref_h = ((200.0 - 3.75 - 10.0 - 3.75) / 210.0) * h
+    # Right Section: x: [99mm, 289mm], y: [8mm, 202mm], Marker size: 7.5mm
+    right_x0 = ((99.0 + 3.75) / 297.0) * w
+    right_y0 = ((8.0 + 3.75) / 210.0) * h
+    right_ref_w = ((289.0 - 3.75 - 99.0 - 3.75) / 297.0) * w
+    right_ref_h = ((202.0 - 3.75 - 8.0 - 3.75) / 210.0) * h
     
-    # Simular marcado de Tema: 'Q'
-    chosen_theme = "Q"
+    # Simular Tema 'R'
+    chosen_theme = "R"
     print(f"3. Simulando marcado de Tema de Examen: '{chosen_theme}'...")
     for tb in tpl["sections"]["answers"]["theme_bubbles"]:
         if tb["theme"] == chosen_theme:
@@ -80,48 +80,44 @@ def run_test_80():
             by = int(h - (right_y0 + b["norm_y"] * right_ref_h))
             cv2.circle(simulated_img, (bx, by), int(w * 0.0055), (35, 35, 35), -1)
             
-    cv2.imwrite("test_official_simulated.png", simulated_img)
-    
-    # 5. Desglose físico
-    cut_x_px = int(w / 2.0)
+    # 5. Desglose físico en X = 95mm
+    cut_x_px = int((95.0 / 297.0) * w)
     half_id = simulated_img[:, :cut_x_px]
     half_ans = simulated_img[:, cut_x_px:]
     
-    # Lectura del código de barras en Identificación
+    # Detección y decodificación de código de barras
     b_id = pyzbar.decode(half_id)
     sheet_code_id = b_id[0].data.decode('utf-8') if b_id else "UNKNOWN"
     print(f"   Código de Barras en Ficha Identificación: {sheet_code_id}")
     
-    # Detección y Alineamiento Identificación
+    # Detección fiduciaria en Identificación (comprobar que sean exactamente 4 marcadores)
     markers_id = engine.find_fiducial_markers(half_id)
+    print(f"   Marcadores fiduciarios detectados en Identificación: {len(markers_id)} (esperados 4)")
     pts_id = [(m[0], m[1]) for m in markers_id]
-    aligned_id, _ = engine.align_quad(half_id, pts_id, out_w=1000, out_h=1400)
+    aligned_id, _ = engine.align_quad(half_id, pts_id, out_w=800, out_h=1500)
     read_dni = engine.read_identification_section(aligned_id)
     print(f"   ⭐️ DNI Reconocido: '{read_dni}' (Esperado: '{student_dni}')")
     
-    # Lectura del código de barras en Respuestas
+    # Detección y decodificación en Respuestas
     b_ans = pyzbar.decode(half_ans)
     sheet_code_ans = b_ans[0].data.decode('utf-8') if b_ans else "UNKNOWN"
     print(f"   Código de Barras en Ficha Respuestas: {sheet_code_ans}")
     
-    # Detección y Alineamiento Respuestas
     markers_ans = engine.find_fiducial_markers(half_ans)
+    print(f"   Marcadores fiduciarios detectados en Respuestas: {len(markers_ans)} (esperados 4)")
     pts_ans = [(m[0], m[1]) for m in markers_ans]
-    aligned_ans, _ = engine.align_quad(half_ans, pts_ans, out_w=1000, out_h=1400)
+    aligned_ans, _ = engine.align_quad(half_ans, pts_ans, out_w=1500, out_h=1500)
     read_answers = engine.read_answers_section(aligned_ans)
     
     read_theme = read_answers.get("_THEME_")
-    print(f"   ⭐️ Tema de Examen Reconocido: '{read_theme}' (Esperado: '{chosen_theme}')")
+    print(f"   ⭐️ Tema Reconocido: '{read_theme}' (Esperado: '{chosen_theme}')")
     
-    # Comprobar precisión de las 80 preguntas
     hits = sum(1 for q in range(1, 81) if read_answers.get(f"Q{q:02d}") == student_answers.get(f"Q{q:02d}"))
     print(f"   ⭐️ Preguntas reconocidas con exactitud: {hits} / 80 ({(hits/80)*100:.1f}%)")
     
-    # Registrar en base de datos y calificar
+    # Conciliación y Calificación
     processor.register_identification(sheet_code_id, read_dni)
     processor.register_answers(sheet_code_ans, read_answers)
-    
-    # Clave del profesor para 80 preguntas
     teacher_key = {f"Q{i:02d}": ['A', 'B', 'C', 'D', 'E'][(i - 1) % 5] for i in range(1, 81)}
     results = processor.reconcile_and_grade(teacher_key, score_correct=1.0, score_incorrect=-0.25)
     
@@ -133,9 +129,6 @@ def run_test_80():
         print(f" Correctas    : {r['correct']} / 80")
         print(f" Puntaje Final: {r['score']} pts")
     print("====================================================================\n")
-    
-    excel_path = processor.export_to_excel("resultados_80_preguntas.xlsx")
-    print(f"Reporte Excel generado en: {excel_path}")
 
 if __name__ == "__main__":
-    run_test_80()
+    run_test_30_70()
