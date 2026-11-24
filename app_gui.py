@@ -297,7 +297,8 @@ class OMRApp:
                 score_correct=float(self.correct_score_var.get()),
                 score_incorrect=float(self.incorrect_score_var.get())
             )
-            self.root.after(0, self._update_table, results)
+            # Actualizar interfaz de forma directa y segura
+            self.root.after(0, lambda res=results: self._update_table(res))
         except Exception as err:
             err_msg = str(err)
             self.root.after(0, lambda: messagebox.showerror("Error al Calificar", err_msg))

@@ -58,6 +58,12 @@ class OMRBatchProcessor:
                 status TEXT
             )
         """)
+        # Migración automática si la tabla se creó previamente sin la columna 'theme'
+        try:
+            cur.execute("ALTER TABLE graded_results ADD COLUMN theme TEXT")
+        except sqlite3.OperationalError:
+            pass # La columna ya existe
+            
         conn.commit()
         conn.close()
 
@@ -125,30 +131,34 @@ class OMRBatchProcessor:
                 answers = json.loads(answers_json)
                 theme = answers.get("_THEME_", "SIN_TEMA")
                 
-                # Seleccionar la clave correspondiente según el tema
-                if isinstance(answer_keys, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in answer_keys.keys()):
-                    target_key = answer_keys.get(theme)
-                    if not target_key:
-                        # Si no marcó tema o tiene tema no configurado, usar por defecto Tema P
-                        target_key = answer_keys.get("P") or list(answer_keys.values())[0]
+                # REGLA OFICIAL: Si no marcó tema o tiene tema dudoso, pasa a OBSERVADO para arbitraje manual
+                if theme in ["SIN_TEMA", "MULTIPLE_THEME"]:
+                    status = f"OBSERVADO ({theme} - Falta asignar tema)"
+                    correct, incorrect, blank, score = 0, 0, 0, 0.0
                 else:
-                    target_key = answer_keys
-                    
-                status = "MATCHED (Calificada)"
-                correct, incorrect, blank = 0, 0, 0
-                
-                for q_key, correct_val in target_key.items():
-                    if q_key.startswith("_"): # Ignorar metadatos
-                        continue
-                    student_val = answers.get(q_key, "BLANK")
-                    if student_val == correct_val:
-                        correct += 1
-                    elif student_val in ["BLANK", "MULTIPLE_MARK"]:
-                        blank += 1
+                    # Seleccionar la clave correspondiente según el tema
+                    if isinstance(answer_keys, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in answer_keys.keys()):
+                        target_key = answer_keys.get(theme)
+                        if not target_key:
+                            target_key = answer_keys.get("P") or list(answer_keys.values())[0]
                     else:
-                        incorrect += 1
+                        target_key = answer_keys
                         
-                score = max(0.0, (correct * score_correct) + (incorrect * score_incorrect))
+                    status = "MATCHED (Calificada)"
+                    correct, incorrect, blank = 0, 0, 0
+                    
+                    for q_key, correct_val in target_key.items():
+                        if q_key.startswith("_"): # Ignorar metadatos
+                            continue
+                        student_val = answers.get(q_key, "BLANK")
+                        if student_val == correct_val:
+                            correct += 1
+                        elif student_val in ["BLANK", "MULTIPLE_MARK"]:
+                            blank += 1
+                        else:
+                            incorrect += 1
+                            
+                    score = max(0.0, (correct * score_correct) + (incorrect * score_incorrect))
                 
             cur.execute("""
                 INSERT OR REPLACE INTO graded_results 
