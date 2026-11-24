@@ -45,7 +45,7 @@ class OMRApp:
         header_title.pack(anchor="w", padx=20, pady=(10, 2))
         header_sub = tk.Label(
             header, text="Fichas Desglosables 30/70 • Código de Barras Code128 • SQLite • Excel", 
-            fg="#D9E1F2", bg="#1F4E79", font=("Segoe UI", 8.5)
+            fg="#D9E1F2", bg="#1F4E79", font=("Segoe UI", 9)
         )
         header_sub.pack(anchor="w", padx=20, pady=(0, 10))
 
