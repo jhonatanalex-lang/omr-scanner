@@ -247,3 +247,65 @@ class OMRBatchProcessor:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         doc.close()
         return img
+
+    def process_scanned_pdf(self, pdf_path, progress_callback=None):
+        """
+        Procesa un archivo PDF escaneado (de 1 o N páginas) que contiene fichas OMR.
+        Detecta automáticamente:
+          - Si la página es una ficha completa (30% Identificación + 70% Respuestas).
+          - Si la página es solo una mitad desglosada (solo Identificación o solo Respuestas).
+        Registra cada sección en la base de datos vinculada a su código de barras.
+        """
+        import pyzbar.pyzbar as pyzbar
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        print(f"Iniciando procesamiento de PDF escaneado: {pdf_path} ({total_pages} páginas)...")
+        
+        for page_idx in range(total_pages):
+            img_bgr = self.rasterize_pdf_page(pdf_path, page_num=page_idx, dpi=300)
+            h, w = img_bgr.shape[:2]
+            
+            # Línea estimada de corte (30% en X = 95mm sobre 297mm)
+            cut_x = int((95.0 / 297.0) * w)
+            left_half = img_bgr[:, :cut_x]
+            right_half = img_bgr[:, cut_x:]
+            
+            # 1. Comprobar si es hoja completa (tiene ambos códigos o marcadores en ambos lados)
+            b_left = pyzbar.decode(left_half)
+            b_right = pyzbar.decode(right_half)
+            
+            # Procesar Mitad Izquierda (Identificación)
+            code_id = b_left[0].data.decode('utf-8') if b_left else None
+            m_left = self.engine.find_fiducial_markers(left_half)
+            if len(m_left) == 4:
+                pts_l = [(m[0], m[1]) for m in m_left]
+                aligned_l, _ = self.engine.align_quad(left_half, pts_l, out_w=800, out_h=1500)
+                student_id = self.engine.read_identification_section(aligned_l)
+                if not code_id:
+                    # Intentar leer código de barras en la imagen alineada
+                    b_al = pyzbar.decode(aligned_l)
+                    if b_al: code_id = b_al[0].data.decode('utf-8')
+                if code_id and student_id:
+                    self.register_identification(code_id, student_id)
+                    print(f"   [Pág {page_idx+1}] Identificación registrada: {code_id} -> DNI: {student_id}")
+
+            # Procesar Mitad Derecha (Respuestas)
+            code_ans = b_right[0].data.decode('utf-8') if b_right else None
+            m_right = self.engine.find_fiducial_markers(right_half)
+            if len(m_right) == 4:
+                pts_r = [(m[0], m[1]) for m in m_right]
+                aligned_r, _ = self.engine.align_quad(right_half, pts_r, out_w=1500, out_h=1500)
+                answers = self.engine.read_answers_section(aligned_r)
+                if not code_ans:
+                    b_ar = pyzbar.decode(aligned_r)
+                    if b_ar: code_ans = b_ar[0].data.decode('utf-8')
+                if code_ans and answers:
+                    self.register_answers(code_ans, answers)
+                    theme = answers.get("_THEME_", "SIN_TEMA")
+                    print(f"   [Pág {page_idx+1}] Respuestas registradas: {code_ans} -> Tema: {theme}")
+                    
+            if progress_callback:
+                progress_callback(page_idx + 1, total_pages)
+                
+        doc.close()
+        print("✅ Procesamiento de páginas finalizado.")

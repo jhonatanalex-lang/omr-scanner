@@ -143,10 +143,14 @@ class OMREngine:
             theme_scores_sorted = sorted(theme_scores, key=lambda x: x[1], reverse=True)
             t_top1 = theme_scores_sorted[0]
             t_top2 = theme_scores_sorted[1]
-            if t_top1[1] >= 0.18 and (t_top1[1] - t_top2[1]) >= 0.035:
+            # Solo se considera marcado si supera un umbral de rellenado real (> 0.45)
+            # y tiene una clara diferencia frente al segundo
+            if t_top1[1] >= 0.45 and (t_top1[1] - t_top2[1]) >= 0.08:
                 detected_theme = t_top1[0]
-            elif t_top1[1] >= 0.18:
+            elif t_top1[1] >= 0.45 and (t_top1[1] - t_top2[1]) < 0.08:
                 detected_theme = "MULTIPLE_THEME"
+            else:
+                detected_theme = "SIN_TEMA" # Ninguna burbuja fue marcada
                 
         # 2. Leer Preguntas
         bubbles = answers_cfg["bubbles"]

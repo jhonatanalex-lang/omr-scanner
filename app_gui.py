@@ -279,7 +279,18 @@ class OMRApp:
 
     def _process_worker(self, file_path):
         try:
-            self.progress_bar["value"] = 60
+            def update_progress(cur, total):
+                pct = int((cur / total) * 70)
+                self.root.after(0, lambda: self.progress_bar.configure(value=pct))
+                self.root.after(0, lambda: self.status_lbl.configure(text=f"Escaneando y leyendo página {cur} de {total}..."))
+                
+            # 1. Procesar el archivo PDF escaneado (leer códigos de barra, DNI y burbujas)
+            self.processor.process_scanned_pdf(file_path, progress_callback=update_progress)
+            
+            # 2. Conciliar y Calificar contra las claves
+            self.root.after(0, lambda: self.status_lbl.configure(text="Conciliando identificaciones y calificando..."))
+            self.root.after(0, lambda: self.progress_bar.configure(value=85))
+            
             results = self.processor.reconcile_and_grade(
                 self.teacher_key, 
                 score_correct=float(self.correct_score_var.get()),
@@ -287,7 +298,7 @@ class OMRApp:
             )
             self.root.after(0, self._update_table, results)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
+            self.root.after(0, lambda: messagebox.showerror("Error al Calificar", str(e)))
         finally:
             self.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
 
