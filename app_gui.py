@@ -29,6 +29,7 @@ class OMRApp:
         self.root.minsize(750, 550)
         
         self.processor = OMRBatchProcessor(db_path="omr_production.db")
+        self.load_sample_key() # Cargar claves multitema por defecto al iniciar
         self.setup_ui()
 
     def setup_ui(self):
@@ -297,8 +298,9 @@ class OMRApp:
                 score_incorrect=float(self.incorrect_score_var.get())
             )
             self.root.after(0, self._update_table, results)
-        except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error al Calificar", str(e)))
+        except Exception as err:
+            err_msg = str(err)
+            self.root.after(0, lambda: messagebox.showerror("Error al Calificar", err_msg))
         finally:
             self.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
 

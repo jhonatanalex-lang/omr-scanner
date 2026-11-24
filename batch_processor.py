@@ -129,6 +129,7 @@ class OMRBatchProcessor:
                 if isinstance(answer_keys, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in answer_keys.keys()):
                     target_key = answer_keys.get(theme)
                     if not target_key:
+                        # Si no marcó tema o tiene tema no configurado, usar por defecto Tema P
                         target_key = answer_keys.get("P") or list(answer_keys.values())[0]
                 else:
                     target_key = answer_keys
