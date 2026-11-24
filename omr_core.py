@@ -184,9 +184,13 @@ class OMREngine:
             top1 = opts_sorted[0]
             top2 = opts_sorted[1]
             
-            if top1["score"] >= 0.18 and (top1["score"] - top2["score"]) >= 0.035:
+            # CALIBRACIÓN DE PRECISIÓN:
+            # Una burbuja vacía con letra impresa (como la 'B') tiene ~0.25 a 0.30 de píxeles negros.
+            # Una burbuja rellenada con lápiz/grafito supera el 0.50 y llega al 0.90+.
+            # Criterio: Solo es válida si supera 0.48 y tiene al menos 0.15 de ventaja sobre la segunda.
+            if top1["score"] >= 0.48 and (top1["score"] - top2["score"]) >= 0.15:
                 results[f"Q{q:02d}"] = top1["option"]
-            elif top1["score"] >= 0.18 and (top1["score"] - top2["score"]) < 0.035:
+            elif top1["score"] >= 0.48 and (top1["score"] - top2["score"]) < 0.15:
                 results[f"Q{q:02d}"] = "MULTIPLE_MARK"
             else:
                 results[f"Q{q:02d}"] = "BLANK"
