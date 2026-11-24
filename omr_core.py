@@ -112,6 +112,46 @@ class OMREngine:
         warped = cv2.warpPerspective(image, M, (w, h))
         return warped, M
 
+    def read_sync_strip(self, aligned_img, section_name="identification"):
+        """
+        Lee la tira binaria óptica (16 bits) a lo largo del horizonte de corte.
+        Devuelve el número entero reconstruido a partir de las burbujas pre-rellenadas (bit 1 vs bit 0).
+        Si la mitad izquierda y la mitad derecha fueron intercambiadas por postulantes distintos,
+        sus números binarios no coincidirán.
+        """
+        if len(aligned_img.shape) == 3:
+            gray = cv2.cvtColor(aligned_img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = aligned_img
+            
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        h, w = gray.shape
+        
+        sync_bits = self.template["sections"][section_name].get("sync_bits", [])
+        if not sync_bits:
+            return None
+            
+        r = int(w * 0.009)
+        bit_string = ""
+        
+        for b in sync_bits:
+            px_x = int(b["norm_x"] * w)
+            px_y = int((1.0 - b["norm_y"]) * h)
+            
+            roi = binary[max(0, px_y - r):min(h, px_y + r), max(0, px_x - r):min(w, px_x + r)]
+            fill_score = cv2.countNonZero(roi) / (roi.size + 1e-5) if roi.size > 0 else 0
+            
+            # Si está rellena en negro sólido (> 0.50), el bit es 1; si es hueca, es 0
+            if fill_score >= 0.50:
+                bit_string += "1"
+            else:
+                bit_string += "0"
+                
+        try:
+            return int(bit_string, 2)
+        except ValueError:
+            return None
+
     def read_answers_section(self, aligned_img):
         """
         Lee las respuestas desde una sección de respuestas alineada ortogonalmente.
@@ -240,8 +280,6 @@ class OMREngine:
                 cv2.circle(overlay, (px_x, px_y), r + 2, (230, 120, 0), 2)
                 
         return overlay
-                
-        return results
 
     def read_identification_section(self, aligned_img):
         """

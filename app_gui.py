@@ -117,12 +117,13 @@ class OMRApp:
         results_frame = ttk.LabelFrame(parent, text=" 3. Resultados Consolidados ", padding=10)
         results_frame.pack(fill=tk.BOTH, expand=True)
 
-        columns = ("pos", "code", "dni", "theme", "correct", "incorrect", "blank", "multiple", "raw", "score", "status")
+        columns = ("pos", "code", "dni", "theme", "sync", "correct", "incorrect", "blank", "multiple", "raw", "score", "status")
         self.tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=7)
         self.tree.heading("pos", text="#")
         self.tree.heading("code", text="Código Hoja")
         self.tree.heading("dni", text="DNI / Estudiante")
         self.tree.heading("theme", text="Tema")
+        self.tree.heading("sync", text="🛡️ Antifraude")
         self.tree.heading("correct", text="Buenas (+5)")
         self.tree.heading("incorrect", text="Malas (0)")
         self.tree.heading("blank", text="Blancas (+1)")
@@ -135,13 +136,18 @@ class OMRApp:
         self.tree.column("code", width=105, anchor="center")
         self.tree.column("dni", width=105, anchor="center")
         self.tree.column("theme", width=50, anchor="center")
+        self.tree.column("sync", width=125, anchor="center")
         self.tree.column("correct", width=75, anchor="center")
         self.tree.column("incorrect", width=65, anchor="center")
         self.tree.column("blank", width=75, anchor="center")
         self.tree.column("multiple", width=70, anchor="center")
         self.tree.column("raw", width=80, anchor="center")
         self.tree.column("score", width=85, anchor="center")
-        self.tree.column("status", width=150, anchor="center")
+        self.tree.column("status", width=160, anchor="center")
+
+        self.tree.tag_configure("fraud", background="#FFC7CE", foreground="#9C0006")
+        self.tree.tag_configure("ok", foreground="#006100")
+        self.tree.tag_configure("observed", foreground="#B25900")
 
         tree_scroll = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=tree_scroll.set)
@@ -328,11 +334,23 @@ class OMRApp:
             self.tree.delete(item)
             
         for idx, r in enumerate(results, start=1):
+            sync_st = r.get("sync_status", "SIN_TIRA")
+            status_txt = r.get("status", "")
+            
+            tag = "normal"
+            if "FRAUDE" in sync_st or "FRAUDE" in status_txt:
+                tag = "fraud"
+            elif "OBSERVADO" in status_txt:
+                tag = "observed"
+            elif "VERIFICADO_OK" in sync_st:
+                tag = "ok"
+
             self.tree.insert("", tk.END, values=(
                 idx, r["sheet_code"], r["student_id"], r.get("theme", "N/A"),
+                sync_st,
                 r["correct"], r["incorrect"], r["blank"], r.get("multiple", 0),
-                f"{r.get('raw_score', 0):.1f}", f"{r['final_score']:.2f}", r["status"]
-            ))
+                f"{r.get('raw_score', 0):.1f}", f"{r['final_score']:.2f}", status_txt
+            ), tags=(tag,))
 
     def open_visual_auditor(self, event=None):
         selected_item = self.tree.focus()
@@ -346,19 +364,25 @@ class OMRApp:
         sheet_code = values[1]
         student_id = values[2]
         theme = values[3]
-        score = values[7]
+        sync_status = values[4]
+        score = values[10]
         
         # Abrir ventana de auditoría visual
         win = tk.Toplevel(self.root)
         win.title(f"Auditor Visual OMR - Ficha: {sheet_code} (DNI: {student_id})")
-        win.geometry("900x700")
+        win.geometry("920x720")
         win.minsize(750, 550)
         
         top_bar = tk.Frame(win, bg="#1F4E79", height=40)
         top_bar.pack(fill=tk.X, side=tk.TOP)
         
-        info_txt = f"Hoja: {sheet_code}  |  DNI: {student_id}  |  Tema: {theme}  |  Nota: {score} pts"
-        tk.Label(top_bar, text=info_txt, fg="white", bg="#1F4E79", font=("Segoe UI", 11, "bold")).pack(side=tk.LEFT, padx=15, pady=8)
+        info_txt = f"Hoja: {sheet_code}  |  DNI: {student_id}  |  Tema: {theme}  |  Nota: {score} pts  |  Seguridad: {sync_status}"
+        tk.Label(top_bar, text=info_txt, fg="white", bg="#1F4E79", font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=15, pady=8)
+        
+        if "FRAUDE" in sync_status:
+            fraud_banner = tk.Frame(win, bg="#CC0000", height=28)
+            fraud_banner.pack(fill=tk.X, side=tk.TOP)
+            tk.Label(fraud_banner, text="⚠️ ALERTA DE SEGURIDAD CRÍTICA: HOJA DE RESPUESTAS INTERCAMBIADA (FRAUDE DETECTADO)", fg="white", bg="#CC0000", font=("Segoe UI", 10, "bold")).pack(pady=4)
         
         # Leyenda de Colores
         leg_frame = ttk.Frame(win, padding=6)

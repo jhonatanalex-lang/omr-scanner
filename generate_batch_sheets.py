@@ -1,8 +1,8 @@
 """
-Generador Masivo Serializado de Fichas OMR Oficiales (30/70)
+Generador Masivo Serializado de Fichas OMR Oficiales (30/70 con Tiras Binarias Antifraude)
 Permite generar un único PDF listo para imprenta/fotocopiadora con N páginas,
 donde cada página contiene un correlativo único (ej: OMR-2026-0001 a OMR-2026-0500)
-con su respectivo código de barras Code128 en ambas mitades desglosables.
+con su respectivo código de barras Code128 y tiras ópticas gemelas antifraude en ambas mitades desglosables.
 """
 
 import os
@@ -17,6 +17,7 @@ PAGE_WIDTH, PAGE_HEIGHT = landscape(A4) # 297mm x 210mm (~841.89 x ~595.28 pt)
 
 MARKER_SIZE = 7.5 * MM    # Cuadrados negros fiduciarios de 7.5mm x 7.5mm
 BUBBLE_R = 2.1 * MM       # Radio de burbuja (~4.2mm de diámetro)
+SYNC_BIT_R = 1.6 * MM     # Radio de los bits de sincronización (~3.2mm de diámetro)
 
 def draw_fiducial_markers(c, x_min, y_min, x_max, y_max, size):
     """Dibuja los 4 marcadores de esquina fiduciarios aislados."""
@@ -26,8 +27,53 @@ def draw_fiducial_markers(c, x_min, y_min, x_max, y_max, size):
     c.rect(x_min, y_max - size, size, size, fill=1, stroke=0)
     c.rect(x_max - size, y_max - size, size, size, fill=1, stroke=0)
 
-def draw_single_omr_page(c, sheet_code, coords_cache=None):
-    """Dibuja una hoja completa A4 apaisada (30% Identificación / 70% Respuestas)."""
+def draw_sync_strip(c, center_x, start_y, bit_spacing, num_bits, bit_val_int):
+    """
+    Dibuja una columna vertical de bits ópticos (16 bits).
+    Las burbujas con bit=1 se rellenan en negro sólido.
+    Las burbujas con bit=0 quedan vacías.
+    """
+    strip_h = (num_bits - 1) * bit_spacing + 8 * MM
+    strip_w = 6.0 * MM
+    
+    # Recuadro exterior protector en color rosa/rojo suave
+    c.setStrokeColor(colors.HexColor("#E06666"))
+    c.setLineWidth(0.6)
+    c.roundRect(center_x - strip_w / 2.0, start_y - (num_bits - 1) * bit_spacing - 4 * MM, strip_w, strip_h, 3 * MM, stroke=1, fill=0)
+    
+    # Texto vertical de advertencia
+    c.saveState()
+    c.setFont("Helvetica-Bold", 4.5)
+    c.setFillColor(colors.HexColor("#CC0000"))
+    c.translate(center_x - 3.8 * MM, start_y - ((num_bits - 1) * bit_spacing) / 2.0)
+    c.rotate(90)
+    c.drawCentredString(0, 0, "NO ESCRIBA EN ESTA AREA")
+    c.restoreState()
+    
+    bit_bubbles = []
+    for bit_idx in range(num_bits):
+        cy = start_y - bit_idx * bit_spacing
+        is_on = (bit_val_int >> (num_bits - 1 - bit_idx)) & 1
+        
+        c.setStrokeColor(colors.black)
+        c.setLineWidth(0.6)
+        if is_on:
+            c.setFillColor(colors.black)
+            c.circle(center_x, cy, SYNC_BIT_R, stroke=1, fill=1)
+        else:
+            c.setFillColor(colors.white)
+            c.circle(center_x, cy, SYNC_BIT_R, stroke=1, fill=0)
+            
+        bit_bubbles.append({
+            "bit_index": bit_idx,
+            "x": center_x,
+            "y": cy,
+            "is_on": is_on
+        })
+    return bit_bubbles
+
+def draw_single_omr_page(c, sheet_code, sheet_id_number, coords_cache=None):
+    """Dibuja una hoja completa A4 apaisada (30% Identificación / 70% Respuestas) con tiras ópticas."""
     cut_x = 95.0 * MM
     
     # Línea central punteada de desglose
@@ -40,6 +86,11 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
     c.setFont("Helvetica", 6)
     c.setFillColor(colors.gray)
     c.drawCentredString(cut_x, 4.5 * MM, "LÍNEA DE DESGLOSE / CORTE")
+    
+    # Marcador fiduciario central superior e inferior sobre la línea de corte
+    c.setFillColor(colors.black)
+    c.rect(cut_x - 1.5 * MM, PAGE_HEIGHT - 12 * MM, 3 * MM, 3 * MM, fill=1, stroke=0)
+    c.rect(cut_x - 1.5 * MM, 9 * MM, 3 * MM, 3 * MM, fill=1, stroke=0)
     
     # =========================================================================
     # SECCIÓN 1: IDENTIFICACIÓN (30%)
@@ -59,19 +110,19 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
     # Encabezado Identificación
     c.setFillColor(colors.black)
     c.setFont("Helvetica-Bold", 9.5)
-    c.drawCentredString((left_x_min + left_x_max) / 2.0, left_y_max - 5.5 * MM, "FICHA DE IDENTIFICACIÓN")
+    c.drawCentredString((left_x_min + left_x_max - 5 * MM) / 2.0, left_y_max - 5.5 * MM, "FICHA DE IDENTIFICACIÓN")
     
     # Código de barras centrado
     barcode_id = code128.Code128(sheet_code, barHeight=5.5 * MM, barWidth=0.75, quiet=0)
     barcode_w = barcode_id.width
-    barcode_x_id = ((left_x_min + left_x_max) / 2.0) - (barcode_w / 2.0)
+    barcode_x_id = ((left_x_min + left_x_max - 5 * MM) / 2.0) - (barcode_w / 2.0)
     barcode_id.drawOn(c, barcode_x_id, left_y_max - 13.5 * MM)
     
     c.setFont("Helvetica", 6)
-    c.drawCentredString((left_x_min + left_x_max) / 2.0, left_y_max - 16 * MM, f"CÓDIGO: {sheet_code}")
+    c.drawCentredString((left_x_min + left_x_max - 5 * MM) / 2.0, left_y_max - 16 * MM, f"CÓDIGO: {sheet_code}")
     
     # Bloque Manuscrito
-    box_w = (left_x_max - left_x_min) - 18 * MM
+    box_w = (left_x_max - left_x_min) - 22 * MM
     box_x = left_x_min + 9 * MM
     cur_y = left_y_max - 20 * MM
     
@@ -94,15 +145,14 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
     c.rect(box_x, cur_y, box_w, 5.0 * MM)
     
     # Matriz DNI (8 dígitos)
-    dni_base_x = box_x + 1.5 * MM
+    dni_base_x = box_x + 1.0 * MM
     dni_base_y = cur_y - 8 * MM
-    col_w = 7.6 * MM
+    col_w = 6.8 * MM
     row_h = 6.0 * MM
     
     c.setFont("Helvetica-Bold", 7.5)
-    c.drawCentredString((left_x_min + left_x_max) / 2.0, dni_base_y + 3.5 * MM, "CÓDIGO / DNI")
+    c.drawCentredString((left_x_min + left_x_max - 8 * MM) / 2.0, dni_base_y + 3.5 * MM, "CÓDIGO / DNI")
     
-    dni_bubbles = []
     c.setFont("Helvetica-Bold", 6.5)
     for col in range(8):
         cx = dni_base_x + col * col_w
@@ -134,6 +184,23 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
     c.drawCentredString(box_x + box_w / 2.0, sign_y + 2.5 * MM, "FIRMA DEL POSTULANTE")
 
     # =========================================================================
+    # TIRAS ÓPTICAS BINARIAS (EN EL HORIZONTE DE DESGLOSE)
+    # =========================================================================
+    NUM_SYNC_BITS = 16
+    SYNC_SPACING = 6.2 * MM
+    SYNC_START_Y = PAGE_HEIGHT - 38 * MM
+    
+    # 1. Tira Binaria en Identificación
+    left_sync_x = cut_x - 8 * MM
+    left_bits = draw_sync_strip(c, left_sync_x, SYNC_START_Y, SYNC_SPACING, NUM_SYNC_BITS, sheet_id_number)
+    
+    if coords_cache is not None and len(coords_cache["sync_bits_id"]) < NUM_SYNC_BITS:
+        for lb in left_bits:
+            u = (lb["x"] - id_ref_x0) / id_ref_w
+            v = (lb["y"] - id_ref_y0) / id_ref_h
+            coords_cache["sync_bits_id"].append({"bit_index": lb["bit_index"], "norm_x": round(u, 5), "norm_y": round(v, 5)})
+
+    # =========================================================================
     # SECCIÓN 2: RESPUESTAS (70%)
     # =========================================================================
     right_x_min = cut_x + 4 * MM
@@ -148,10 +215,20 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
     ans_ref_w = (right_x_max - MARKER_SIZE / 2.0) - ans_ref_x0
     ans_ref_h = (right_y_max - MARKER_SIZE / 2.0) - ans_ref_y0
     
+    # 2. Tira Binaria en Respuestas (simétrica gemela)
+    right_sync_x = cut_x + 8 * MM
+    right_bits = draw_sync_strip(c, right_sync_x, SYNC_START_Y, SYNC_SPACING, NUM_SYNC_BITS, sheet_id_number)
+    
+    if coords_cache is not None and len(coords_cache["sync_bits_ans"]) < NUM_SYNC_BITS:
+        for rb in right_bits:
+            u = (rb["x"] - ans_ref_x0) / ans_ref_w
+            v = (rb["y"] - ans_ref_y0) / ans_ref_h
+            coords_cache["sync_bits_ans"].append({"bit_index": rb["bit_index"], "norm_x": round(u, 5), "norm_y": round(v, 5)})
+            
     # Encabezado Respuestas
     c.setFillColor(colors.black)
     c.setFont("Helvetica-Bold", 11)
-    c.drawString(right_x_min + 12 * MM, right_y_max - 6 * MM, "HOJA DE RESPUESTAS")
+    c.drawString(right_x_min + 16 * MM, right_y_max - 6 * MM, "HOJA DE RESPUESTAS")
     
     barcode_ans = code128.Code128(sheet_code, barHeight=5.5 * MM, barWidth=0.8, quiet=0)
     barcode_ans_x = right_x_max - 52 * MM
@@ -161,7 +238,7 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
     
     # Tema (P, Q, R, S, T, U)
     theme_y = right_y_max - 18 * MM
-    theme_x = right_x_min + 12 * MM
+    theme_x = right_x_min + 16 * MM
     c.setFont("Helvetica-Bold", 8)
     c.drawString(theme_x, theme_y + 1 * MM, "TEMA:")
     
@@ -184,11 +261,11 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
             
     # 80 Preguntas en 4 columnas
     options = ['A', 'B', 'C', 'D', 'E']
-    opt_spacing = 5.2 * MM
+    opt_spacing = 5.0 * MM
     row_height = 7.6 * MM
-    col_width = 44.5 * MM
+    col_width = 42.5 * MM
     ans_start_y = right_y_max - 28 * MM
-    ans_start_x = right_x_min + 11 * MM
+    ans_start_x = right_x_min + 15 * MM
     
     for col_idx in range(4):
         col_x = ans_start_x + col_idx * col_width
@@ -200,7 +277,7 @@ def draw_single_omr_page(c, sheet_code, coords_cache=None):
         
         c.setStrokeColor(colors.lightgrey)
         c.setLineWidth(0.4)
-        c.line(col_x, ans_start_y + 2.5 * MM, col_x + 39 * MM, ans_start_y + 2.5 * MM)
+        c.line(col_x, ans_start_y + 2.5 * MM, col_x + 38 * MM, ans_start_y + 2.5 * MM)
         
         c.setStrokeColor(colors.black)
         c.setLineWidth(0.6)
@@ -239,20 +316,27 @@ def generate_mass_omr_sheets(
 ):
     """
     Genera un archivo PDF con 'quantity' páginas numeradas correlativamente.
-    Ejemplo: OMR-2026-0001 a OMR-2026-0050.
+    Ejemplo: OMR-2026-0001 a OMR-2026-0050 con tiras binarias gemelas sincronizadas.
     """
     c = canvas.Canvas(output_pdf, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
-    coords_cache = {"identification": [], "themes": [], "answers": []}
+    coords_cache = {
+        "identification": [],
+        "sync_bits_id": [],
+        "themes": [],
+        "sync_bits_ans": [],
+        "answers": []
+    }
     
     print(f"Iniciando generación de {quantity} fichas OMR serializadas ({prefix}-{start_num:04d} a {prefix}-{(start_num + quantity - 1):04d})...")
     
     for idx in range(quantity):
         current_num = start_num + idx
         sheet_code = f"{prefix}-{current_num:04d}"
+        sheet_id_number = current_num % 65536
         
         # En la primera página capturamos las coordenadas fijas
         cache = coords_cache if idx == 0 else None
-        draw_single_omr_page(c, sheet_code, cache)
+        draw_single_omr_page(c, sheet_code, sheet_id_number, cache)
         c.showPage()
         
         if progress_callback:
@@ -263,13 +347,15 @@ def generate_mass_omr_sheets(
     
     # Guardar / actualizar template_coords.json
     template_data = {
-        "format": "A4_landscape_80q_30_70",
+        "format": "A4_landscape_80q_30_70_sync",
         "bubble_radius_mm": 2.1,
+        "sync_bit_radius_mm": 1.6,
         "marker_size_mm": 7.5,
         "sections": {
             "identification": {
                 "num_digits": 8,
                 "fields": ["apellido_paterno", "apellido_materno", "nombres", "firma"],
+                "sync_bits": coords_cache["sync_bits_id"],
                 "bubbles": coords_cache["identification"]
             },
             "answers": {
@@ -277,6 +363,7 @@ def generate_mass_omr_sheets(
                 "options": ['A', 'B', 'C', 'D', 'E'],
                 "theme_options": ['P', 'Q', 'R', 'S', 'T', 'U'],
                 "theme_bubbles": coords_cache["themes"],
+                "sync_bits": coords_cache["sync_bits_ans"],
                 "bubbles": coords_cache["answers"]
             }
         }

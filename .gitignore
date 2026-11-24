@@ -5,3 +5,10 @@ __pycache__/
 *.pyc
 .vscode/
 .idea/
+*.db
+debug_*.png
+test_*.png
+temp_preview/
+scanned_alignments/
+*.xlsx
+lote_fichas_impresion.pdf

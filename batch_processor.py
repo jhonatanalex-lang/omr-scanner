@@ -31,9 +31,14 @@ class OMRBatchProcessor:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 sheet_code TEXT UNIQUE,
                 student_id TEXT,
+                sync_id INTEGER,
                 scan_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        try:
+            cur.execute("ALTER TABLE identification_sheets ADD COLUMN sync_id INTEGER")
+        except sqlite3.OperationalError:
+            pass
         
         # Tabla de Respuestas
         cur.execute("""
@@ -42,13 +47,15 @@ class OMRBatchProcessor:
                 sheet_code TEXT UNIQUE,
                 answers_json TEXT,
                 aligned_image_path TEXT,
+                sync_id INTEGER,
                 scan_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        try:
-            cur.execute("ALTER TABLE answer_sheets ADD COLUMN aligned_image_path TEXT")
-        except sqlite3.OperationalError:
-            pass
+        for col_def in ["aligned_image_path TEXT", "sync_id INTEGER"]:
+            try:
+                cur.execute(f"ALTER TABLE answer_sheets ADD COLUMN {col_def}")
+            except sqlite3.OperationalError:
+                pass
         
         # Tabla de Calificaciones Consolidadas
         cur.execute("""
@@ -62,13 +69,19 @@ class OMRBatchProcessor:
                 multiple_count INTEGER,
                 raw_score REAL,
                 final_score REAL,
-                status TEXT
+                status TEXT,
+                sync_status TEXT,
+                sync_id_left INTEGER,
+                sync_id_right INTEGER
             )
         """)
         # Migración de columnas adicionales
         for col_def in [
             "multiple_count INTEGER DEFAULT 0",
-            "raw_score REAL DEFAULT 0.0"
+            "raw_score REAL DEFAULT 0.0",
+            "sync_status TEXT DEFAULT 'SIN_TIRA'",
+            "sync_id_left INTEGER",
+            "sync_id_right INTEGER"
         ]:
             try:
                 cur.execute(f"ALTER TABLE graded_results ADD COLUMN {col_def}")
@@ -78,23 +91,23 @@ class OMRBatchProcessor:
         conn.commit()
         conn.close()
 
-    def register_identification(self, sheet_code, student_id):
+    def register_identification(self, sheet_code, student_id, sync_id=None):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
-            INSERT OR REPLACE INTO identification_sheets (sheet_code, student_id)
-            VALUES (?, ?)
-        """, (sheet_code, student_id))
+            INSERT OR REPLACE INTO identification_sheets (sheet_code, student_id, sync_id)
+            VALUES (?, ?, ?)
+        """, (sheet_code, student_id, sync_id))
         conn.commit()
         conn.close()
 
-    def register_answers(self, sheet_code, answers_dict, aligned_img_path=None):
+    def register_answers(self, sheet_code, answers_dict, aligned_img_path=None, sync_id=None):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
-            INSERT OR REPLACE INTO answer_sheets (sheet_code, answers_json, aligned_image_path)
-            VALUES (?, ?, ?)
-        """, (sheet_code, json.dumps(answers_dict), aligned_img_path))
+            INSERT OR REPLACE INTO answer_sheets (sheet_code, answers_json, aligned_image_path, sync_id)
+            VALUES (?, ?, ?, ?)
+        """, (sheet_code, json.dumps(answers_dict), aligned_img_path, sync_id))
         conn.commit()
         conn.close()
 
@@ -118,14 +131,18 @@ class OMRBatchProcessor:
             SELECT 
                 COALESCE(a.sheet_code, i.sheet_code) AS sheet_code,
                 i.student_id,
-                a.answers_json
+                a.answers_json,
+                i.sync_id AS id_sync,
+                a.sync_id AS ans_sync
             FROM answer_sheets a
             LEFT JOIN identification_sheets i ON a.sheet_code = i.sheet_code
             UNION
             SELECT 
                 COALESCE(a.sheet_code, i.sheet_code) AS sheet_code,
                 i.student_id,
-                a.answers_json
+                a.answers_json,
+                i.sync_id AS id_sync,
+                a.sync_id AS ans_sync
             FROM identification_sheets i
             LEFT JOIN answer_sheets a ON i.sheet_code = a.sheet_code
         """
@@ -133,7 +150,22 @@ class OMRBatchProcessor:
         rows = cur.fetchall()
         
         results = []
-        for sheet_code, student_id, answers_json in rows:
+        for sheet_code, student_id, answers_json, id_sync, ans_sync in rows:
+            # 1. Comprobación Antifraude por Tiras Binarias
+            is_fraud = False
+            if id_sync is not None and ans_sync is not None:
+                if id_sync != ans_sync:
+                    is_fraud = True
+                    sync_status = f"FRAUDE_DETECTADO (ID #{id_sync} != Resp #{ans_sync})"
+                else:
+                    sync_status = f"VERIFICADO_OK (#{id_sync})"
+            elif id_sync is not None:
+                sync_status = f"SOLO_ID (#{id_sync})"
+            elif ans_sync is not None:
+                sync_status = f"SOLO_RESP (#{ans_sync})"
+            else:
+                sync_status = "SIN_TIRA"
+
             if not student_id:
                 status = "ORPHAN_ANSWERS (Falta ficha de datos)"
                 theme = "N/A"
@@ -141,6 +173,11 @@ class OMRBatchProcessor:
             elif not answers_json:
                 status = "ORPHAN_IDENTIFICATION (Falta ficha de respuestas)"
                 theme = "N/A"
+                correct, incorrect, blank, multiple, raw_score, final_score = 0, 0, 0, 0, 0.0, 0.0
+            elif is_fraud:
+                # ALERTA DE SEGURIDAD MÁXIMA: La hoja de respuestas no corresponde a la de identificación
+                status = f"ALERTA FRAUDE: Hoja intercambiada (ID #{id_sync} vs Resp #{ans_sync})"
+                theme = json.loads(answers_json).get("_THEME_", "SIN_TEMA")
                 correct, incorrect, blank, multiple, raw_score, final_score = 0, 0, 0, 0, 0.0, 0.0
             else:
                 answers = json.loads(answers_json)
@@ -191,15 +228,18 @@ class OMRBatchProcessor:
                 
             cur.execute("""
                 INSERT OR REPLACE INTO graded_results 
-                (sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, multiple_count, raw_score, final_score, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (sheet_code, student_id or "UNKNOWN", theme, correct, incorrect, blank, multiple, raw_score, final_score, status))
+                (sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, multiple_count, raw_score, final_score, status, sync_status, sync_id_left, sync_id_right)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (sheet_code, student_id or "UNKNOWN", theme, correct, incorrect, blank, multiple, raw_score, final_score, status, sync_status, id_sync, ans_sync))
             
             results.append({
                 "sheet_code": sheet_code,
                 "student_id": student_id or "DESCONOCIDO",
                 "theme": theme,
                 "status": status,
+                "sync_status": sync_status,
+                "sync_id_left": id_sync,
+                "sync_id_right": ans_sync,
                 "correct": correct,
                 "incorrect": incorrect,
                 "blank": blank,
@@ -220,7 +260,7 @@ class OMRBatchProcessor:
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
-            SELECT sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, multiple_count, raw_score, final_score, status
+            SELECT sheet_code, student_id, theme, sync_status, correct_count, incorrect_count, blank_count, multiple_count, raw_score, final_score, status
             FROM graded_results
             ORDER BY final_score DESC
         """)
@@ -242,7 +282,13 @@ class OMRBatchProcessor:
             bottom=Side(style='thin', color='D9D9D9')
         )
         
-        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Tema", "Correctas (+5)", "Incorrectas (0)", "En Blanco (+1)", "Doble Marca (0)", "Puntaje Bruto", "Nota (0-20)", "Estado"]
+        # Estilos para antifraude
+        fraud_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+        fraud_font = Font(name="Calibri", size=10, bold=True, color="9C0006")
+        ok_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+        ok_font = Font(name="Calibri", size=10, bold=False, color="006100")
+        
+        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Tema", "Seguridad Antifraude", "Correctas (+5)", "Incorrectas (0)", "En Blanco (+1)", "Doble Marca (0)", "Puntaje Bruto", "Nota (0-20)", "Estado"]
         ws.append(headers)
         
         for col_num in range(1, len(headers) + 1):
@@ -253,8 +299,8 @@ class OMRBatchProcessor:
             cell.border = thin_border
             
         for idx, row in enumerate(rows, start=1):
-            sheet_code, student_id, theme, correct, incorrect, blank, multiple, raw_sc, final_sc, status = row
-            data_row = [idx, sheet_code, student_id, theme or "N/A", correct, incorrect, blank, multiple, raw_sc, final_sc, status]
+            sheet_code, student_id, theme, sync_status, correct, incorrect, blank, multiple, raw_sc, final_sc, status = row
+            data_row = [idx, sheet_code, student_id, theme or "N/A", sync_status or "SIN_TIRA", correct, incorrect, blank, multiple, raw_sc, final_sc, status]
             ws.append(data_row)
             
             row_num = idx + 1
@@ -262,8 +308,20 @@ class OMRBatchProcessor:
                 cell = ws.cell(row=row_num, column=col_num)
                 cell.alignment = center_align
                 cell.border = thin_border
-                if col_num in [9, 10]: # Puntaje Bruto y Nota 0-20
+                
+                # Formato especial columna Seguridad Antifraude (Columna 5)
+                if col_num == 5:
+                    if "FRAUDE" in str(sync_status):
+                        cell.fill = fraud_fill
+                        cell.font = fraud_font
+                    elif "VERIFICADO_OK" in str(sync_status):
+                        cell.fill = ok_fill
+                        cell.font = ok_font
+                        
+                if col_num in [10, 11]: # Puntaje Bruto y Nota 0-20
                     cell.font = Font(bold=True)
+                    if "FRAUDE" in str(status):
+                        cell.font = Font(bold=True, color="9C0006")
                     
         # Autoajustar anchos de columna
         for col in ws.columns:
@@ -323,13 +381,14 @@ class OMRBatchProcessor:
                 pts_l = [(m[0], m[1]) for m in m_left]
                 aligned_l, _ = self.engine.align_quad(left_half, pts_l, out_w=800, out_h=1500)
                 student_id = self.engine.read_identification_section(aligned_l)
+                sync_id_left = self.engine.read_sync_strip(aligned_l, section_name="identification")
                 if not code_id:
                     # Intentar leer código de barras en la imagen alineada
                     b_al = pyzbar.decode(aligned_l)
                     if b_al: code_id = b_al[0].data.decode('utf-8')
                 if code_id and student_id:
-                    self.register_identification(code_id, student_id)
-                    print(f"   [Pág {page_idx+1}] Identificación registrada: {code_id} -> DNI: {student_id}")
+                    self.register_identification(code_id, student_id, sync_id=sync_id_left)
+                    print(f"   [Pág {page_idx+1}] Identificación registrada: {code_id} -> DNI: {student_id} (Sync: {sync_id_left})")
 
             # Procesar Mitad Derecha (Respuestas)
             code_ans = b_right[0].data.decode('utf-8') if b_right else None
@@ -338,6 +397,7 @@ class OMRBatchProcessor:
                 pts_r = [(m[0], m[1]) for m in m_right]
                 aligned_r, _ = self.engine.align_quad(right_half, pts_r, out_w=1500, out_h=1500)
                 answers = self.engine.read_answers_section(aligned_r)
+                sync_id_right = self.engine.read_sync_strip(aligned_r, section_name="answers")
                 if not code_ans:
                     b_ar = pyzbar.decode(aligned_r)
                     if b_ar: code_ans = b_ar[0].data.decode('utf-8')
@@ -348,9 +408,9 @@ class OMRBatchProcessor:
                     save_align_path = os.path.join("scanned_alignments", f"{safe_name}.png")
                     cv2.imwrite(save_align_path, aligned_r)
                     
-                    self.register_answers(code_ans, answers, aligned_img_path=save_align_path)
+                    self.register_answers(code_ans, answers, aligned_img_path=save_align_path, sync_id=sync_id_right)
                     theme = answers.get("_THEME_", "SIN_TEMA")
-                    print(f"   [Pág {page_idx+1}] Respuestas registradas: {code_ans} -> Tema: {theme}")
+                    print(f"   [Pág {page_idx+1}] Respuestas registradas: {code_ans} -> Tema: {theme} (Sync: {sync_id_right})")
                     
             if progress_callback:
                 progress_callback(page_idx + 1, total_pages)
