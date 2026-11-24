@@ -180,63 +180,63 @@ def generate_omr_sheet(
     c.setFont("Helvetica-Bold", 7.5)
     c.drawCentredString(box_x + box_w / 2.0, banner_y + 1.2 * MM, "HOJA DE IDENTIFICACIÓN")
     
-    # 1.3 Bloque Manuscrito de Datos Personales
-    cur_y = banner_y - 3.8 * MM
-    c.setLineWidth(0.6)
+    # 1.3 Bloque Manuscrito de Datos Personales (Casillas amplias y ergonómicas)
+    cur_y = banner_y - 3.5 * MM
+    c.setLineWidth(0.65)
     c.setStrokeColor(COLOR_UNSAAC_MEDIUM)
     
-    field_h = 4.8 * MM
-    corner_r = 1.2 * MM
+    field_h = 7.5 * MM
+    corner_r = 1.5 * MM
     
     # Apellido Paterno
-    c.setFont("Helvetica-Bold", 5.5)
+    c.setFont("Helvetica-Bold", 5.8)
     c.setFillColor(COLOR_UNSAAC_WINE)
-    c.drawString(box_x + 1 * MM, cur_y, "APELLIDO PATERNO:")
-    cur_y -= (field_h + 0.8 * MM)
+    c.drawString(box_x + 1.2 * MM, cur_y, "APELLIDO PATERNO:")
+    cur_y -= (field_h + 1.0 * MM)
     c.roundRect(box_x, cur_y, box_w, field_h, corner_r, stroke=1, fill=0)
     
     # Apellido Materno
-    cur_y -= 2.6 * MM
-    c.drawString(box_x + 1 * MM, cur_y, "APELLIDO MATERNO:")
-    cur_y -= (field_h + 0.8 * MM)
+    cur_y -= 3.2 * MM
+    c.drawString(box_x + 1.2 * MM, cur_y, "APELLIDO MATERNO:")
+    cur_y -= (field_h + 1.0 * MM)
     c.roundRect(box_x, cur_y, box_w, field_h, corner_r, stroke=1, fill=0)
     
     # Nombres
-    cur_y -= 2.6 * MM
-    c.drawString(box_x + 1 * MM, cur_y, "NOMBRES:")
-    cur_y -= (field_h + 0.8 * MM)
+    cur_y -= 3.2 * MM
+    c.drawString(box_x + 1.2 * MM, cur_y, "NOMBRES:")
+    cur_y -= (field_h + 1.0 * MM)
     c.roundRect(box_x, cur_y, box_w, field_h, corner_r, stroke=1, fill=0)
     
     # 1.4 Matriz DNI (8 dígitos)
-    cur_y -= 4.2 * MM
-    dni_header_h = 4.0 * MM
+    cur_y -= 5.0 * MM
+    dni_header_h = 4.5 * MM
     c.setFillColor(COLOR_UNSAAC_TINT)
     c.setStrokeColor(COLOR_UNSAAC_WINE)
     c.roundRect(box_x, cur_y, box_w, dni_header_h, 1.2 * MM, fill=1, stroke=1)
     c.setFillColor(COLOR_UNSAAC_WINE)
-    c.setFont("Helvetica-Bold", 6.5)
-    c.drawCentredString(box_x + box_w / 2.0, cur_y + 1.1 * MM, "NÚMERO DE DNI")
+    c.setFont("Helvetica-Bold", 6.8)
+    c.drawCentredString(box_x + box_w / 2.0, cur_y + 1.2 * MM, "NÚMERO DE DNI")
     
     dni_base_x = box_x + 1.0 * MM
     col_w = 6.8 * MM
-    row_h = 5.4 * MM
-    write_box_y = cur_y - 5.5 * MM
+    row_h = 5.8 * MM
+    write_box_y = cur_y - 6.5 * MM
     
     c.setStrokeColor(COLOR_UNSAAC_MEDIUM)
     c.setFillColor(colors.black)
-    c.setFont("Helvetica-Bold", 6)
+    c.setFont("Helvetica-Bold", 6.2)
     
     dni_bubbles = []
     for col in range(8):
         cx = dni_base_x + col * col_w
-        # Casilla superior para escribir el dígito
-        c.roundRect(cx - 2.8 * MM, write_box_y, 5.6 * MM, 4.8 * MM, 0.8 * MM, stroke=1, fill=0)
+        # Casilla superior para escribir el dígito (ampliada a 6.0mm de altura)
+        c.roundRect(cx - 2.8 * MM, write_box_y, 5.6 * MM, 5.8 * MM, 1.0 * MM, stroke=1, fill=0)
         
         # 10 Burbujas verticales del 0 al 9
         for val in range(10):
-            cy = (write_box_y - 4.5 * MM) - (val * row_h)
-            c.circle(cx, cy, 1.85 * MM, stroke=1, fill=0)
-            c.drawCentredString(cx, cy - 1.8, str(val))
+            cy = (write_box_y - 4.8 * MM) - (val * row_h)
+            c.circle(cx, cy, 1.95 * MM, stroke=1, fill=0)
+            c.drawCentredString(cx, cy - 1.9, str(val))
             
             u = (cx - id_ref_x0) / id_ref_w
             v = (cy - id_ref_y0) / id_ref_h
@@ -248,8 +248,8 @@ def generate_omr_sheet(
             })
             
     # 1.5 Recuadro de Instrucciones (Identificación)
-    inst_y = (write_box_y - 4.5 * MM) - (9.5 * row_h) - 3.5 * MM
-    inst_h = 16.5 * MM
+    inst_y = (write_box_y - 4.8 * MM) - (9.5 * row_h) - 4.5 * MM
+    inst_h = 20.0 * MM
     
     c.setStrokeColor(COLOR_UNSAAC_BORDER)
     c.setFillColor(COLOR_UNSAAC_TINT)
@@ -257,34 +257,35 @@ def generate_omr_sheet(
     
     # Barra de título Instrucciones
     c.setFillColor(COLOR_UNSAAC_WINE)
-    c.roundRect(box_x, inst_y - 3.8 * MM, box_w, 3.8 * MM, 1.0 * MM, fill=1, stroke=0)
+    c.roundRect(box_x, inst_y - 4.2 * MM, box_w, 4.2 * MM, 1.2 * MM, fill=1, stroke=0)
     c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 5.2)
-    c.drawCentredString(box_x + box_w / 2.0, inst_y - 2.8 * MM, "INSTRUCCIONES")
+    c.setFont("Helvetica-Bold", 5.5)
+    c.drawCentredString(box_x + box_w / 2.0, inst_y - 3.0 * MM, "INSTRUCCIONES")
     
     c.setFillColor(COLOR_TEXT_DARK)
-    c.setFont("Helvetica", 4.2)
+    c.setFont("Helvetica", 4.3)
     inst_text_1 = "Escriba los ocho dígitos de su DNI en las casillas correspondientes"
     inst_text_2 = "y rellene en cada columna el círculo del dígito registrado."
     inst_text_3 = "Llene con lápiz 2B de forma nítida. Evite borrones o enmendaduras."
-    c.drawString(box_x + 1.5 * MM, inst_y - 6.2 * MM, inst_text_1)
-    c.drawString(box_x + 1.5 * MM, inst_y - 8.2 * MM, inst_text_2)
-    c.drawString(box_x + 1.5 * MM, inst_y - 10.2 * MM, inst_text_3)
+    c.drawString(box_x + 1.8 * MM, inst_y - 7.0 * MM, inst_text_1)
+    c.drawString(box_x + 1.8 * MM, inst_y - 9.4 * MM, inst_text_2)
+    c.drawString(box_x + 1.8 * MM, inst_y - 11.8 * MM, inst_text_3)
     
-    draw_mark_examples(c, box_x + 1.5 * MM, inst_y - 14.5 * MM, compact=True)
+    draw_mark_examples(c, box_x + 1.8 * MM, inst_y - 17.0 * MM, compact=True)
     
-    # 1.6 Firma del Postulante
-    sign_box_y = inst_y - inst_h - 2.5 * MM
-    sign_box_h = 13.0 * MM
+    # 1.6 Firma del Postulante (Espacio amplio aprovechando la parte inferior)
+    sign_box_y = inst_y - inst_h - 4.5 * MM
+    sign_box_h = 22.0 * MM
     c.setStrokeColor(COLOR_UNSAAC_MEDIUM)
+    c.setLineWidth(0.65)
     c.roundRect(box_x, sign_box_y - sign_box_h, box_w, sign_box_h, 1.5 * MM, stroke=1, fill=0)
     c.setDash(2, 2)
     c.setStrokeColor(colors.gray)
-    c.line(box_x + 4 * MM, sign_box_y - sign_box_h + 4.5 * MM, box_x + box_w - 4 * MM, sign_box_y - sign_box_h + 4.5 * MM)
+    c.line(box_x + 5 * MM, sign_box_y - sign_box_h + 6.5 * MM, box_x + box_w - 5 * MM, sign_box_y - sign_box_h + 6.5 * MM)
     c.setDash()
-    c.setFont("Helvetica", 4.8)
+    c.setFont("Helvetica-Bold", 5.0)
     c.setFillColor(COLOR_TEXT_DARK)
-    c.drawCentredString(box_x + box_w / 2.0, sign_box_y - sign_box_h + 2.0 * MM, "FIRMA DEL POSTULANTE (dentro del cuadro)")
+    c.drawCentredString(box_x + box_w / 2.0, sign_box_y - sign_box_h + 2.8 * MM, "FIRMA DEL POSTULANTE (dentro del cuadro)")
     
     # 1.7 Tira Binaria Óptica en Identificación
     NUM_SYNC_BITS = 16
