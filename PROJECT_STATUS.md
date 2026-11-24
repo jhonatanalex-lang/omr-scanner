@@ -27,27 +27,32 @@ Si dos postulantes coludidos intentan intercambiar bajo la mesa sus fichas de re
 
 ---
 
-## 🎯 Especificaciones de la Ficha Optimizada (`omr_sheet_master.pdf`)
+## 🎯 Especificaciones de la Ficha Oficial UNSAAC (`omr_sheet_master.pdf`)
 
 ### 1. Dimensiones y Proporción 30% / 70%:
+- **Institución:** Universidad Nacional de San Antonio Abad del Cusco (UNSAAC).
+- **Identidad Visual:** Escudo oficial centrado en ambas mitades, paleta carmesí / guinda institucional (`#7A1C24`) con acentos en tinte suave (`#F9F1F1`) y bordes redondeados ergonómicos.
 - **Formato:** Hoja estándar **A4 Apaisada (297 mm x 210 mm)**.
 - **Línea de Desglose / Corte:** Ubicada en **X = 95 mm** (deja ~32% para Identificación y ~68% para Respuestas).
-- **Aislamiento Fiduciario:** Códigos de barras y tiras binarias aisladas con zona de silencio para 0% de interferencia con los 4 marcadores de esquina.
+- **Aislamiento Fiduciario:** 4 marcadores de esquina negros aislados en cada mitad con zona de silencio total (0% interferencia).
 
 ### 2. Sección de Identificación (Mitad Izquierda - 30%):
-- **Encabezado:** Título y Código de barras Code128.
-- **Campos Manuscritos:** Casillas delimitadas para Apellido Paterno, Apellido Materno y Nombres.
-- **Matriz OMR de Código / DNI:** 8 columnas $\times$ 10 filas (0 al 9) con casillas superiores para escribir el número con lápiz.
-- **Espacio de Firma:** Recuadro con línea de firma ubicado ergonómicamente en la parte inferior.
-- **Tira Binaria Antifraude:** 16 bits ópticos pre-rellenados.
+- **Encabezado:** Escudo oficial de la UNSAAC y título: `UNIVERSIDAD NACIONAL DE SAN ANTONIO ABAD DEL CUSCO`, seguido del banner `HOJA DE IDENTIFICACIÓN`.
+- **Campos Manuscritos:** Casillas redondeadas (`roundRect`) con borde guinda institucional para Apellido Paterno, Apellido Materno y Nombres.
+- **Matriz OMR de Código / DNI:** Banner `NÚMERO DE DNI`, casillas redondeadas para escritura manuscrita y 8 columnas $\times$ 10 filas (0 al 9) de burbujas.
+- **Cuadro de Instrucciones y Ejemplos:** Banner guinda con recomendaciones de llenado de DNI y ejemplos gráficos (`CORRECTO ●`, `INCORRECTO ✔ ✖ ◐`).
+- **Espacio de Firma:** Recuadro redondeado con línea de puntos: `FIRMA DEL POSTULANTE (dentro del cuadro)`.
+- **Tira Binaria Antifraude:** 16 bits ópticos pre-rellenados y código vertical correlativo.
 
 ### 3. Sección de Respuestas (Mitad Derecha - 70%):
-- **Tira Binaria Antifraude:** 16 bits ópticos gemelos idénticos a los de identificación.
-- **Tema / Tipo de Examen:** 6 alternativas visibles (**P, Q, R, S, T, U**).
-- **80 Preguntas con alternativas A, B, C, D, E:**
-  - 4 columnas generosas con espacio interlineal cómodo ($7.6 \text{ mm}$ de separación por fila).
-  - Burbujas de mayor diámetro ($4.2 \text{ mm}$ de diámetro) fáciles de rellenar para el estudiante.
-- **Código de Barras Code128:** Idéntico al de identificación.
+- **Encabezado:** Escudo oficial de la UNSAAC, títulos `UNIVERSIDAD NACIONAL DE SAN ANTONIO ABAD DEL CUSCO` y `HOJA ÓPTICA DE EVALUACIÓN ACADÉMICA`.
+- **Badges:** Banner redondeado `HOJA DE RESPUESTAS` y selector de `TIPO DE TEMA` (**P, Q, R, S, T, U**).
+- **80 Preguntas con Franjas Alternadas (Zebra Striping):**
+  - 4 columnas de 20 preguntas (1-20, 21-40, 41-60, 61-80).
+  - Cada fila cuenta con una **franja horizontal delimitadora** alternada (filas pares con tinte tenue `#F9F1F1` y filas impares en blanco) para evitar que la vista del estudiante se desplace a otra fila.
+  - Opciones de respuesta `A, B, C, D, E` y numeración en negrita guinda.
+- **Banner Inferior de Instrucciones Oficiales:** 6 reglas numeradas según el modelo oficial de examen y guía de `USE SÓLO LÁPIZ 2B` con ejemplos de marcado.
+- **Tira Binaria Antifraude:** Idéntica y gemela a la de identificación.
 
 ---
 

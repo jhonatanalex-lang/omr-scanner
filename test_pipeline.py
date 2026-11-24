@@ -127,7 +127,7 @@ def run_test_30_70():
         print(f" Estudiante ID: {r['student_id']}")
         print(f" Estado       : {r['status']}")
         print(f" Correctas    : {r['correct']} / 80")
-        print(f" Puntaje Final: {r['score']} pts")
+        print(f" Puntaje Final: {r['final_score']} pts")
     print("====================================================================\n")
 
 if __name__ == "__main__":
