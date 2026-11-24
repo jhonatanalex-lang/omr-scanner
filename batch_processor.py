@@ -59,15 +59,21 @@ class OMRBatchProcessor:
                 correct_count INTEGER,
                 incorrect_count INTEGER,
                 blank_count INTEGER,
+                multiple_count INTEGER,
+                raw_score REAL,
                 final_score REAL,
                 status TEXT
             )
         """)
-        # Migración automática si la tabla se creó previamente sin la columna 'theme'
-        try:
-            cur.execute("ALTER TABLE graded_results ADD COLUMN theme TEXT")
-        except sqlite3.OperationalError:
-            pass # La columna ya existe
+        # Migración de columnas adicionales
+        for col_def in [
+            "multiple_count INTEGER DEFAULT 0",
+            "raw_score REAL DEFAULT 0.0"
+        ]:
+            try:
+                cur.execute(f"ALTER TABLE graded_results ADD COLUMN {col_def}")
+            except sqlite3.OperationalError:
+                pass
             
         conn.commit()
         conn.close()
@@ -92,13 +98,17 @@ class OMRBatchProcessor:
         conn.commit()
         conn.close()
 
-    def reconcile_and_grade(self, answer_keys, score_correct=1.0, score_incorrect=-0.25):
+    def reconcile_and_grade(self, answer_keys, score_correct=5.0, score_incorrect=0.0, score_blank=1.0, score_multiple=0.0):
         """
         Realiza el JOIN relacional entre Identificación y Respuestas,
-        detecta el tema del examen (P, Q, R, S, T, U) y califica contra la clave respectiva.
-        answer_keys puede ser:
-          - Un dict simple { "Q01": "A", ... } (clave única para todos los temas).
-          - Un dict multi-tema { "P": {...}, "Q": {...}, ... }
+        califica con el sistema de ponderación institucional:
+          - Correcta: 5 pts (por defecto)
+          - Incorrecta: 0 pts
+          - En Blanco: 1 pto
+          - Doble Marca / Múltiple: 0 pts (anulada)
+          - Nota Vigecimal: Convertida a escala de 0 a 20.
+            Puntaje Máximo Posible = Total_Preguntas * score_correct (ej: 80 * 5 = 400 pts)
+            Nota Vigesimal = (Puntaje_Obtenido / Puntaje_Maximo) * 20.0
         """
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
@@ -127,21 +137,20 @@ class OMRBatchProcessor:
             if not student_id:
                 status = "ORPHAN_ANSWERS (Falta ficha de datos)"
                 theme = "N/A"
-                correct, incorrect, blank, score = 0, 0, 0, 0.0
+                correct, incorrect, blank, multiple, raw_score, final_score = 0, 0, 0, 0, 0.0, 0.0
             elif not answers_json:
                 status = "ORPHAN_IDENTIFICATION (Falta ficha de respuestas)"
                 theme = "N/A"
-                correct, incorrect, blank, score = 0, 0, 0, 0.0
+                correct, incorrect, blank, multiple, raw_score, final_score = 0, 0, 0, 0, 0.0, 0.0
             else:
                 answers = json.loads(answers_json)
                 theme = answers.get("_THEME_", "SIN_TEMA")
                 
-                # REGLA OFICIAL: Si no marcó tema o tiene tema dudoso, pasa a OBSERVADO para arbitraje manual
+                # REGLA: Si no tiene tema, queda OBSERVADO
                 if theme in ["SIN_TEMA", "MULTIPLE_THEME"]:
                     status = f"OBSERVADO ({theme} - Falta asignar tema)"
-                    correct, incorrect, blank, score = 0, 0, 0, 0.0
+                    correct, incorrect, blank, multiple, raw_score, final_score = 0, 0, 0, 0, 0.0, 0.0
                 else:
-                    # Seleccionar la clave correspondiente según el tema
                     if isinstance(answer_keys, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in answer_keys.keys()):
                         target_key = answer_keys.get(theme)
                         if not target_key:
@@ -150,36 +159,53 @@ class OMRBatchProcessor:
                         target_key = answer_keys
                         
                     status = "MATCHED (Calificada)"
-                    correct, incorrect, blank = 0, 0, 0
+                    correct, incorrect, blank, multiple = 0, 0, 0, 0
+                    total_questions = 0
                     
                     for q_key, correct_val in target_key.items():
-                        if q_key.startswith("_"): # Ignorar metadatos
+                        if q_key.startswith("_"):
                             continue
+                        total_questions += 1
                         student_val = answers.get(q_key, "BLANK")
-                        if student_val == correct_val:
-                            correct += 1
-                        elif student_val in ["BLANK", "MULTIPLE_MARK"]:
+                        
+                        if student_val == "MULTIPLE_MARK":
+                            # Doble marca: Se considera mala / anulada (0 pts)
+                            multiple += 1
+                        elif student_val == "BLANK":
+                            # En blanco: 1 pto
                             blank += 1
+                        elif student_val == correct_val:
+                            # Correcta: 5 pts
+                            correct += 1
                         else:
+                            # Incorrecta: 0 pts
                             incorrect += 1
                             
-                    score = max(0.0, (correct * score_correct) + (incorrect * score_incorrect))
+                    # Cálculo de puntaje bruto (raw score)
+                    raw_score = (correct * score_correct) + (incorrect * score_incorrect) + (blank * score_blank) + (multiple * score_multiple)
+                    raw_score = max(0.0, raw_score)
+                    
+                    # Conversión a Escala Vigesimal (0 a 20)
+                    max_possible = total_questions * score_correct if total_questions > 0 else 1.0
+                    final_score = round((raw_score / max_possible) * 20.0, 2)
                 
             cur.execute("""
                 INSERT OR REPLACE INTO graded_results 
-                (sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, final_score, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (sheet_code, student_id or "UNKNOWN", theme, correct, incorrect, blank, score, status))
+                (sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, multiple_count, raw_score, final_score, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (sheet_code, student_id or "UNKNOWN", theme, correct, incorrect, blank, multiple, raw_score, final_score, status))
             
             results.append({
                 "sheet_code": sheet_code,
                 "student_id": student_id or "DESCONOCIDO",
                 "theme": theme,
                 "status": status,
-                "score": score,
                 "correct": correct,
                 "incorrect": incorrect,
-                "blank": blank
+                "blank": blank,
+                "multiple": multiple,
+                "raw_score": raw_score,
+                "final_score": final_score
             })
             
         conn.commit()
@@ -194,7 +220,7 @@ class OMRBatchProcessor:
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
-            SELECT sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, final_score, status
+            SELECT sheet_code, student_id, theme, correct_count, incorrect_count, blank_count, multiple_count, raw_score, final_score, status
             FROM graded_results
             ORDER BY final_score DESC
         """)
@@ -216,7 +242,7 @@ class OMRBatchProcessor:
             bottom=Side(style='thin', color='D9D9D9')
         )
         
-        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Tema", "Correctas", "Incorrectas", "En Blanco", "Nota Final", "Estado"]
+        headers = ["Puesto", "Código Hoja", "DNI / Estudiante", "Tema", "Correctas (+5)", "Incorrectas (0)", "En Blanco (+1)", "Doble Marca (0)", "Puntaje Bruto", "Nota (0-20)", "Estado"]
         ws.append(headers)
         
         for col_num in range(1, len(headers) + 1):
@@ -227,8 +253,8 @@ class OMRBatchProcessor:
             cell.border = thin_border
             
         for idx, row in enumerate(rows, start=1):
-            sheet_code, student_id, theme, correct, incorrect, blank, score, status = row
-            data_row = [idx, sheet_code, student_id, theme or "N/A", correct, incorrect, blank, score, status]
+            sheet_code, student_id, theme, correct, incorrect, blank, multiple, raw_sc, final_sc, status = row
+            data_row = [idx, sheet_code, student_id, theme or "N/A", correct, incorrect, blank, multiple, raw_sc, final_sc, status]
             ws.append(data_row)
             
             row_num = idx + 1
@@ -236,7 +262,7 @@ class OMRBatchProcessor:
                 cell = ws.cell(row=row_num, column=col_num)
                 cell.alignment = center_align
                 cell.border = thin_border
-                if col_num == 8: # Nota
+                if col_num in [9, 10]: # Puntaje Bruto y Nota 0-20
                     cell.font = Font(bold=True)
                     
         # Autoajustar anchos de columna

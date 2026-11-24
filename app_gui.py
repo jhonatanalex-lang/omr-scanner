@@ -74,16 +74,24 @@ class OMRApp:
 
         row1 = ttk.Frame(cfg_frame)
         row1.pack(fill=tk.X, pady=2)
-        ttk.Label(row1, text="Puntos por Acierto:").pack(side=tk.LEFT, padx=(0, 5))
-        self.correct_score_var = tk.StringVar(value="1.0")
-        ttk.Entry(row1, textvariable=self.correct_score_var, width=6).pack(side=tk.LEFT, padx=(0, 15))
+        ttk.Label(row1, text="Correcta:").pack(side=tk.LEFT, padx=(0, 2))
+        self.correct_score_var = tk.StringVar(value="5.0")
+        ttk.Entry(row1, textvariable=self.correct_score_var, width=5).pack(side=tk.LEFT, padx=(0, 10))
 
-        ttk.Label(row1, text="Penalidad por Error:").pack(side=tk.LEFT, padx=(0, 5))
-        self.incorrect_score_var = tk.StringVar(value="-0.25")
-        ttk.Entry(row1, textvariable=self.incorrect_score_var, width=6).pack(side=tk.LEFT, padx=(0, 15))
+        ttk.Label(row1, text="Incorrecta:").pack(side=tk.LEFT, padx=(0, 2))
+        self.incorrect_score_var = tk.StringVar(value="0.0")
+        ttk.Entry(row1, textvariable=self.incorrect_score_var, width=5).pack(side=tk.LEFT, padx=(0, 10))
 
-        self.key_status_var = tk.StringVar(value="Claves cargadas: P, Q, R, S, T, U (80 Preguntas)")
-        ttk.Button(row1, text="⚙️ Administrar Claves Multitema...", command=self.open_multitheme_dialog).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(row1, text="En Blanco:").pack(side=tk.LEFT, padx=(0, 2))
+        self.blank_score_var = tk.StringVar(value="1.0")
+        ttk.Entry(row1, textvariable=self.blank_score_var, width=5).pack(side=tk.LEFT, padx=(0, 10))
+
+        ttk.Label(row1, text="Doble Marca:").pack(side=tk.LEFT, padx=(0, 2))
+        self.multiple_score_var = tk.StringVar(value="0.0")
+        ttk.Entry(row1, textvariable=self.multiple_score_var, width=5).pack(side=tk.LEFT, padx=(0, 15))
+
+        self.key_status_var = tk.StringVar(value="Claves: P, Q, R, S, T, U (Escala 0 - 20)")
+        ttk.Button(row1, text="⚙️ Administrar Claves...", command=self.open_multitheme_dialog).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Label(row1, textvariable=self.key_status_var, font=("Segoe UI", 8, "italic"), foreground="#1F4E79").pack(side=tk.LEFT)
 
         # Panel 2: Archivo Escaneado
@@ -109,27 +117,31 @@ class OMRApp:
         results_frame = ttk.LabelFrame(parent, text=" 3. Resultados Consolidados ", padding=10)
         results_frame.pack(fill=tk.BOTH, expand=True)
 
-        columns = ("pos", "code", "dni", "theme", "correct", "incorrect", "blank", "score", "status")
+        columns = ("pos", "code", "dni", "theme", "correct", "incorrect", "blank", "multiple", "raw", "score", "status")
         self.tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=7)
         self.tree.heading("pos", text="#")
         self.tree.heading("code", text="Código Hoja")
         self.tree.heading("dni", text="DNI / Estudiante")
         self.tree.heading("theme", text="Tema")
-        self.tree.heading("correct", text="Correctas")
-        self.tree.heading("incorrect", text="Incorrectas")
-        self.tree.heading("blank", text="En Blanco")
-        self.tree.heading("score", text="Nota Final")
+        self.tree.heading("correct", text="Buenas (+5)")
+        self.tree.heading("incorrect", text="Malas (0)")
+        self.tree.heading("blank", text="Blancas (+1)")
+        self.tree.heading("multiple", text="Dobles (0)")
+        self.tree.heading("raw", text="Ptos Brutos")
+        self.tree.heading("score", text="Nota (0-20)")
         self.tree.heading("status", text="Estado Conciliación")
 
         self.tree.column("pos", width=35, anchor="center")
-        self.tree.column("code", width=110, anchor="center")
-        self.tree.column("dni", width=110, anchor="center")
-        self.tree.column("theme", width=55, anchor="center")
-        self.tree.column("correct", width=70, anchor="center")
-        self.tree.column("incorrect", width=70, anchor="center")
-        self.tree.column("blank", width=70, anchor="center")
-        self.tree.column("score", width=80, anchor="center")
-        self.tree.column("status", width=160, anchor="center")
+        self.tree.column("code", width=105, anchor="center")
+        self.tree.column("dni", width=105, anchor="center")
+        self.tree.column("theme", width=50, anchor="center")
+        self.tree.column("correct", width=75, anchor="center")
+        self.tree.column("incorrect", width=65, anchor="center")
+        self.tree.column("blank", width=75, anchor="center")
+        self.tree.column("multiple", width=70, anchor="center")
+        self.tree.column("raw", width=80, anchor="center")
+        self.tree.column("score", width=85, anchor="center")
+        self.tree.column("status", width=150, anchor="center")
 
         tree_scroll = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=tree_scroll.set)
@@ -297,7 +309,9 @@ class OMRApp:
             results = self.processor.reconcile_and_grade(
                 self.teacher_key, 
                 score_correct=float(self.correct_score_var.get()),
-                score_incorrect=float(self.incorrect_score_var.get())
+                score_incorrect=float(self.incorrect_score_var.get()),
+                score_blank=float(self.blank_score_var.get()),
+                score_multiple=float(self.multiple_score_var.get())
             )
             # Actualizar interfaz de forma directa y segura
             self.root.after(0, lambda res=results: self._update_table(res))
@@ -316,8 +330,8 @@ class OMRApp:
         for idx, r in enumerate(results, start=1):
             self.tree.insert("", tk.END, values=(
                 idx, r["sheet_code"], r["student_id"], r.get("theme", "N/A"),
-                r["correct"], r["incorrect"], r["blank"],
-                r["score"], r["status"]
+                r["correct"], r["incorrect"], r["blank"], r.get("multiple", 0),
+                f"{r.get('raw_score', 0):.1f}", f"{r['final_score']:.2f}", r["status"]
             ))
 
     def open_visual_auditor(self, event=None):
