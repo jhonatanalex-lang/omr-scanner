@@ -126,50 +126,63 @@ class OMREngine:
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
         answers_cfg = self.template["sections"]["answers"]
-        bubbles = answers_cfg["bubbles"]
         
-        # Agrupar burbujas por pregunta
+        # 1. Leer Tema del Examen (P, Q, R, S, T, U) si está presente
+        detected_theme = "SIN_TEMA"
+        if "theme_bubbles" in answers_cfg:
+            theme_scores = []
+            h, w = gray.shape
+            r = int(w * 0.010)
+            for tb in answers_cfg["theme_bubbles"]:
+                px_x = int(tb["norm_x"] * w)
+                px_y = int((1.0 - tb["norm_y"]) * h)
+                roi = binary[max(0, px_y - r):min(h, px_y + r), max(0, px_x - r):min(w, px_x + r)]
+                fill_score = cv2.countNonZero(roi) / (roi.size + 1e-5) if roi.size > 0 else 0
+                theme_scores.append((tb["theme"], fill_score))
+                
+            theme_scores_sorted = sorted(theme_scores, key=lambda x: x[1], reverse=True)
+            t_top1 = theme_scores_sorted[0]
+            t_top2 = theme_scores_sorted[1]
+            if t_top1[1] >= 0.18 and (t_top1[1] - t_top2[1]) >= 0.035:
+                detected_theme = t_top1[0]
+            elif t_top1[1] >= 0.18:
+                detected_theme = "MULTIPLE_THEME"
+                
+        # 2. Leer Preguntas
+        bubbles = answers_cfg["bubbles"]
         questions = {}
         h, w = gray.shape
+        r = int(w * 0.010)
         
         for b in bubbles:
             q = b["question"]
             if q not in questions:
                 questions[q] = []
                 
-            # Mapeo de coordenadas relativas (recordar que en ReportLab y=0 es bottom)
-            # En OpenCV y=0 es top, por tanto: px_y = (1.0 - norm_y) * h
             px_x = int(b["norm_x"] * w)
             px_y = int((1.0 - b["norm_y"]) * h)
             
-            # Muestrear el ROI de la burbuja (radio ~ 2.4mm aprox 18-24 px)
-            r = int(w * 0.012)
             roi = binary[max(0, px_y - r):min(h, px_y + r), max(0, px_x - r):min(w, px_x + r)]
-            
             fill_score = cv2.countNonZero(roi) / (roi.size + 1e-5) if roi.size > 0 else 0
             questions[q].append({
                 "option": b["option"],
-                "score": fill_score,
-                "x": px_x,
-                "y": px_y
+                "score": fill_score
             })
             
-        results = {}
+        results = {"_THEME_": detected_theme}
         for q, opts in sorted(questions.items()):
-            # Ordenar por puntuación de llenado descendente
             opts_sorted = sorted(opts, key=lambda x: x["score"], reverse=True)
             top1 = opts_sorted[0]
             top2 = opts_sorted[1]
             
-            # Algoritmo de decisión diferencial (robusto contra bordes de círculo y borrones)
-            # Una burbuja vacía solo tiene la circunferencia (~0.12 a 0.14 de píxeles)
-            # Una burbuja rellenada supera 0.18+ y tiene al menos 0.04 más de contraste que la siguiente
             if top1["score"] >= 0.18 and (top1["score"] - top2["score"]) >= 0.035:
                 results[f"Q{q:02d}"] = top1["option"]
             elif top1["score"] >= 0.18 and (top1["score"] - top2["score"]) < 0.035:
-                results[f"Q{q:02d}"] = "MULTIPLE_MARK" # Doble marca / invalidada
+                results[f"Q{q:02d}"] = "MULTIPLE_MARK"
             else:
-                results[f"Q{q:02d}"] = "BLANK" # Sin responder
+                results[f"Q{q:02d}"] = "BLANK"
+                
+        return results
                 
         return results
 

@@ -1,62 +1,51 @@
-# Proyecto OMR - Calificación de Fichas Desglosables (Identificación y Respuestas)
+# Proyecto OMR - Calificación de Fichas Desglosables Oficiales
 
 ## 📌 Resumen del Proyecto y Contexto
-Sistema integral de grado de producción para el diseño, escaneo, lectura, calificación y conciliación de **hojas OMR (Optical Mark Recognition)** en exámenes masivos. Utiliza visión por computadora con OpenCV, decodificación de códigos de barras Code128, base de datos relacional SQLite y exportación ejecutiva a Excel.
+Sistema integral de grado de producción para el diseño, escaneo, lectura, calificación y conciliación de **hojas OMR (Optical Mark Recognition)** en exámenes masivos. Cuenta con soporte oficial para fichas de 80 preguntas, selección de tema/tipo de prueba (P, Q, R, S, T, U), DNI de 8 dígitos, casillas de datos manuscritos y código de barras Code128 de enlace unívoco.
 
 ---
 
-## 🎯 Arquitectura Completa Implementada
+## 🎯 Especificaciones Oficiales de la Ficha (`omr_sheet_master.pdf`)
 
-### 1. Generador Paramétrico con Código de Barras (`generate_omr_sheet.py`)
-- **Hoja A4 Apaisada:** Maquetada matemáticamente en milímetros con `reportlab`.
-- **Línea de Trepado Central:** Permite el desglose físico entre Identificación y Respuestas.
-- **8 Marcadores Fiduciarios:** Cuadrados de $8 \times 8 \text{ mm}$ en las 4 esquinas de cada mitad desglosada.
-- **Enlace Unívoco por Código de Barras:** Genera códigos **Code128 nativos** con zona de silencio (*quiet zone*) en ambas secciones (`OMR-2026-XXXX`). Verificado y decodificable al 100% con `pyzbar`.
-- **Salida:** `omr_sheet_master.pdf` y `template_coords.json`.
+### 1. Sección de Identificación (Mitad Izquierda):
+- **Placeholder de Logotipo Institucional:** Cuadrante superior reservado para el logo oficial de la institución.
+- **Campos Manuscritos:** Casillas delimitadas independientes para:
+  - Apellido Paterno
+  - Apellido Materno
+  - Nombres
+- **Código de Estudiante / DNI:** Matriz numérica OMR de 8 columnas por 10 filas (0 al 9) con casillas superiores para escribir el número.
+- **Espacio de Firma:** Recuadro delimitado para la firma del postulante (sin huella dactilar para evitar manchas accidentales en las burbujas).
+- **Código de Barras Code128:** Serializado y decodificable automáticamente con `pyzbar`.
+- **4 Marcadores Fiduciarios:** Cuadrados negros sólidos de $7.5 \times 7.5 \text{ mm}$ en las 4 esquinas.
 
-### 2. Motor de Visión por Computadora (`omr_core.py`)
-- **Localización Fiduciaria:** Detección de marcadores cuadrados extremos tolerante a rotaciones y sombras.
-- **Corrección Proyectiva Isométrica (`align_quad`):** Homografía de 4 puntos (`cv2.warpPerspective`) a resolución ortogonal fija.
-- **Lectura de Burbujas Diferencial:** Clasificador por contraste relativo inmune a ruidos de impresión o borrones de lápiz.
-
-### 3. Procesador por Lotes y Conciliación Relacional (`batch_processor.py`)
-- Rasterizado ultra-rápido de lotes PDF con `PyMuPDF` (`fitz`).
-- **Base de Datos SQLite:**
-  - Registra fichas de identificación y respuestas por separado.
-  - Conciliación relacional `JOIN` por `sheet_code`.
-  - Calificación ponderada y detección de fichas huérfanas o dobles marcas.
-- **Exportación Ejecutiva a Excel (`export_to_excel`):**
-  - Genera archivos `.xlsx` estilizados con formato corporativo (cabecera azul marino, bordes, alineación y cálculo de puestos).
-
-### 4. Aplicación de Escritorio Interactiva (`app_gui.py`)
-- Desarrollada en Python nativo (`Tkinter` / `ttk`).
-- Permite al docente:
-  - Configurar puntaje por acierto y penalidad por error.
-  - Cargar clave de examen personalizada con un clic.
-  - Seleccionar el archivo PDF de fichas escaneadas mediante explorador de archivos.
-  - Barra de progreso y tabla interactiva de resultados en vivo.
-  - Botón de exportación directa a Excel.
+### 2. Sección de Respuestas (Mitad Derecha):
+- **Tema / Tipo de Examen:** 6 burbujas para opciones **P, Q, R, S, T, U**.
+- **80 Preguntas con 5 Alternativas (A, B, C, D, E):**
+  - Distribución optimizada en **4 columnas de 20 preguntas** cada una.
+  - Columna 1: Preguntas 01 al 20
+  - Columna 2: Preguntas 21 al 40
+  - Columna 3: Preguntas 41 al 60
+  - Columna 4: Preguntas 61 al 80
+- **Código de Barras Code128:** Enlace idéntico al de la sección de identificación.
+- **4 Marcadores Fiduciarios:** Cuadrados negros sólidos de $7.5 \times 7.5 \text{ mm}$ en las 4 esquinas.
 
 ---
 
-## 🧪 Pruebas y Métricas de Rendimiento
-- **Detección Fiduciaria:** 4 de 4 esquinas por sección detectadas sin falsos positivos.
-- **Lectura de Código de Barras:** 100% de decodificación en ambas mitades escaneadas.
-- **Exactitud OMR:** **100% de precisión** (40 de 40 preguntas identificadas correctamente y DNI de 8 dígitos decodificado sin errores).
-- **Exportación Excel:** Verificada con `openpyxl`.
+## 🧪 Pruebas y Métricas de Rendimiento Verificadas
+Ejecutadas mediante `test_pipeline.py` simulando escaneo real a 300 DPI y corte físico:
+- **Lectura de Código de Barras:** Identificación y Respuestas decodificadas al 100% (`OMR-2026-0001`).
+- **DNI Estudiante:** `46291035` decodificado al **100%**.
+- **Tema de Examen:** `Q` detectado al **100%**.
+- **Preguntas:** **80 de 80 preguntas reconocidas con exactitud (100.0%)**.
+- **Conciliación en Base de Datos:** Registrada y calificada exitosamente en `omr_results.db`.
+- **Exportación Excel:** Reporte generado en `resultados_80_preguntas.xlsx`.
 
 ---
 
-## 💻 Cómo Iniciar el Sistema en Cualquier Computadora
-1. **Generar la Ficha Maestra:**
-   ```bash
-   python generate_omr_sheet.py
-   ```
-2. **Ejecutar la Prueba de Integración:**
-   ```bash
-   python test_pipeline.py
-   ```
-3. **Abrir la Aplicación de Escritorio:**
-   ```bash
-   python app_gui.py
-   ```
+## 💻 Aplicación de Escritorio (`app_gui.py`)
+Ejecutable mediante:
+```cmd
+cd /d "D:\COPIAR ZIPLANE"
+python app_gui.py
+```
+Permite cargar la clave de 80 preguntas, procesar el lote escaneado y exportar el acta de notas a Excel.
