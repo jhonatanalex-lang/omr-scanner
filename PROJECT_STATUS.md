@@ -1,7 +1,7 @@
-# Proyecto OMR - Calificación de Fichas Desglosables Oficiales (Versión 30/70)
+# Proyecto OMR - Calificación de Fichas Desglosables Oficiales (Suite Completa)
 
 ## 📌 Resumen del Proyecto y Contexto
-Sistema integral de grado de producción para el diseño, generación masiva serializada, escaneo, lectura, calificación y conciliación de **hojas OMR (Optical Mark Recognition)** en exámenes masivos. Cuenta con soporte oficial para fichas de 80 preguntas en proporción 30% / 70%, selección de tema (P, Q, R, S, T, U), DNI de 8 dígitos y códigos de barras Code128 con zona de silencio de seguridad fiduciaria.
+Sistema integral de grado de producción para el diseño, generación masiva serializada, escaneo, lectura, calificación, conciliación y auditoría visual de **hojas OMR (Optical Mark Recognition)** en exámenes masivos. Cuenta con soporte oficial para fichas de 80 preguntas en proporción 30% / 70%, selección de tema (P, Q, R, S, T, U), DNI de 8 dígitos, códigos de barras Code128 con zona de silencio de seguridad fiduciaria y auditor visual interactivo.
 
 ---
 
@@ -44,17 +44,17 @@ Sistema integral de grado de producción para el diseño, generación masiva ser
 
 ---
 
-## 💻 Aplicación de Escritorio Interactiva (`app_gui.py`)
-La aplicación cuenta ahora con dos pestañas de trabajo:
-1. **📊 Calificar Exámenes:**
-   - Botón *"⚙️ Administrar Claves Multitema..."* con editor visual para los 6 temas.
-   - Puntuación por acierto y penalidad configurable.
-   - Procesamiento en lote de PDFs con barra de progreso.
-   - Tabla interactiva con columna `Tema` y exportación a Excel (.xlsx).
-2. **🖨️ Generar Hojas para Imprenta:**
-   - Interfaz visual para ingresar prefijo, correlativo inicial y cantidad de hojas a generar.
-   - Barra de progreso interactiva y guardado del PDF para imprenta.
+## 🔍 Auditor Visual Interactivo Docente (`app_gui.py`)
+- **Doble clic en la tabla:** Abre inmediatamente la ventana de auditoría visual del examen seleccionado.
+- **Resaltado por Colores sobre la imagen real:**
+  - 🟢 **Verde:** Opción marcada correcta.
+  - 🔴 **Rojo:** Opción marcada incorrecta.
+  - 🔵 **Azul:** La respuesta que era correcta (para retroalimentación rápida).
+  - 🟠 **Naranja:** Marcas dobles o tachones detectados para arbitraje manual del docente.
 
+---
+
+## 💻 Aplicación de Escritorio Interactiva (`app_gui.py`)
 Ejecutable mediante:
 ```cmd
 cd /d "D:\COPIAR ZIPLANE"

@@ -132,6 +132,9 @@ class OMRApp:
         self.tree.configure(yscrollcommand=tree_scroll.set)
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Evento doble clic para Auditoría Visual
+        self.tree.bind("<Double-1>", self.open_visual_auditor)
 
         footer = ttk.Frame(parent)
         footer.pack(fill=tk.X, pady=(8, 0))
@@ -300,6 +303,98 @@ class OMRApp:
                 r["correct"], r["incorrect"], r["blank"],
                 r["score"], r["status"]
             ))
+
+    def open_visual_auditor(self, event=None):
+        selected_item = self.tree.focus()
+        if not selected_item:
+            return
+            
+        values = self.tree.item(selected_item, "values")
+        if not values:
+            return
+            
+        sheet_code = values[1]
+        student_id = values[2]
+        theme = values[3]
+        score = values[7]
+        
+        # Abrir ventana de auditoría visual
+        win = tk.Toplevel(self.root)
+        win.title(f"Auditor Visual OMR - Ficha: {sheet_code} (DNI: {student_id})")
+        win.geometry("900x700")
+        win.minsize(750, 550)
+        
+        top_bar = tk.Frame(win, bg="#1F4E79", height=40)
+        top_bar.pack(fill=tk.X, side=tk.TOP)
+        
+        info_txt = f"Hoja: {sheet_code}  |  DNI: {student_id}  |  Tema: {theme}  |  Nota: {score} pts"
+        tk.Label(top_bar, text=info_txt, fg="white", bg="#1F4E79", font=("Segoe UI", 11, "bold")).pack(side=tk.LEFT, padx=15, pady=8)
+        
+        # Leyenda de Colores
+        leg_frame = ttk.Frame(win, padding=6)
+        leg_frame.pack(fill=tk.X)
+        ttk.Label(leg_frame, text="Leyenda: ", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(10, 5))
+        ttk.Label(leg_frame, text="● Opción Correcta Marcada", foreground="green", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=8)
+        ttk.Label(leg_frame, text="● Opción Incorrecta Marcada", foreground="red", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=8)
+        ttk.Label(leg_frame, text="● Respuesta Correcta No Marcada", foreground="#0070C0", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=8)
+        ttk.Label(leg_frame, text="● Doble Marca / Dudosa", foreground="orange", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=8)
+
+        # Canvas con Scroll para ver la hoja auditada
+        canvas_frame = ttk.Frame(win)
+        canvas_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        cv = tk.Canvas(canvas_frame, bg="#EAEAEA")
+        v_bar = ttk.Scrollbar(canvas_frame, orient=tk.VERTICAL, command=cv.yview)
+        h_bar = ttk.Scrollbar(canvas_frame, orient=tk.HORIZONTAL, command=cv.xview)
+        cv.configure(xscrollcommand=h_bar.set, yscrollcommand=v_bar.set)
+        
+        v_bar.pack(side=tk.RIGHT, fill=tk.Y)
+        h_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        cv.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Generar o cargar imagen de auditoría
+        try:
+            # Obtener respuestas del estudiante desde la base de datos
+            import sqlite3
+            from PIL import Image, ImageTk
+            conn = sqlite3.connect(self.processor.db_path)
+            cur = conn.cursor()
+            cur.execute("SELECT answers_json FROM answer_sheets WHERE sheet_code = ?", (sheet_code,))
+            row = cur.fetchone()
+            conn.close()
+            
+            if row and row[0]:
+                st_answers = json.loads(row[0])
+            else:
+                st_answers = {}
+                
+            # Clave según tema
+            t_key = self.teacher_key.get(theme) if isinstance(self.teacher_key, dict) and theme in self.teacher_key else self.teacher_key
+            if isinstance(t_key, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in t_key.keys()):
+                t_key = t_key.get("P", {})
+                
+            # Cargar imagen alineada guardada o simulación
+            img_path = "debug_audit_overlay.png"
+            if not os.path.exists(img_path):
+                # Generar una de muestra si aún no existe
+                engine = self.processor.engine
+                dummy_img = np.ones((1500, 1500, 3), dtype=np.uint8) * 255
+                overlay = engine.generate_audit_overlay(dummy_img, st_answers, t_key)
+                cv2.imwrite(img_path, overlay)
+                
+            pil_img = Image.open(img_path)
+            # Escalar a tamaño de visualización
+            disp_w = 750
+            disp_h = int((disp_w / pil_img.width) * pil_img.height)
+            pil_resized = pil_img.resize((disp_w, disp_h), Image.Resampling.LANCZOS)
+            
+            tk_img = ImageTk.PhotoImage(pil_resized)
+            # Mantener referencia viva
+            cv.image_ref = tk_img
+            cv.create_image(20, 20, anchor="nw", image=tk_img)
+            cv.config(scrollregion=(0, 0, disp_w + 40, disp_h + 40))
+        except Exception as err:
+            cv.create_text(200, 100, text=f"No se pudo cargar la vista de imagen:\n{str(err)}", fill="red", font=("Segoe UI", 10))
 
     def export_excel(self):
         try:

@@ -170,6 +170,11 @@ class OMREngine:
             })
             
         results = {"_THEME_": detected_theme}
+        # Crear copia para visualización y auditoría
+        annotated = aligned_img.copy()
+        if len(annotated.shape) == 2:
+            annotated = cv2.cvtColor(annotated, cv2.COLOR_GRAY2BGR)
+            
         for q, opts in sorted(questions.items()):
             opts_sorted = sorted(opts, key=lambda x: x["score"], reverse=True)
             top1 = opts_sorted[0]
@@ -183,6 +188,50 @@ class OMREngine:
                 results[f"Q{q:02d}"] = "BLANK"
                 
         return results
+                
+    def generate_audit_overlay(self, aligned_img, student_answers, target_key):
+        """
+        Genera una imagen para auditoría visual docente:
+          - Dibuja un círculo VERDE sobre la opción marcada correcta.
+          - Dibuja un círculo ROJO sobre la opción marcada incorrecta.
+          - Dibuja un círculo AZUL sobre la opción que era la respuesta correcta.
+          - Resalta en NARANJA dobles marcas o tachones.
+        """
+        if len(aligned_img.shape) == 2:
+            overlay = cv2.cvtColor(aligned_img, cv2.COLOR_GRAY2BGR)
+        else:
+            overlay = aligned_img.copy()
+            
+        h, w = overlay.shape[:2]
+        answers_cfg = self.template["sections"]["answers"]
+        r = int(w * 0.010)
+        
+        for b in answers_cfg["bubbles"]:
+            q_num = b["question"]
+            opt = b["option"]
+            q_key = f"Q{q_num:02d}"
+            
+            px_x = int(b["norm_x"] * w)
+            px_y = int((1.0 - b["norm_y"]) * h)
+            
+            marked = student_answers.get(q_key)
+            correct_opt = target_key.get(q_key)
+            
+            if marked == "MULTIPLE_MARK":
+                # Marca doble / dudosa: resaltar en naranja
+                cv2.circle(overlay, (px_x, px_y), r + 3, (0, 165, 255), 2)
+            elif marked == opt:
+                if opt == correct_opt:
+                    # Marcó correcta: Círculo verde grueso
+                    cv2.circle(overlay, (px_x, px_y), r + 4, (0, 200, 0), 3)
+                else:
+                    # Marcó incorrecta: Círculo rojo grueso
+                    cv2.circle(overlay, (px_x, px_y), r + 4, (0, 0, 230), 3)
+            elif opt == correct_opt and marked != correct_opt:
+                # Era la correcta pero el alumno no la marcó (o la dejó en blanco): círculo azul
+                cv2.circle(overlay, (px_x, px_y), r + 2, (230, 120, 0), 2)
+                
+        return overlay
                 
         return results
 
