@@ -18,6 +18,8 @@ from tkinter import ttk, filedialog, messagebox
 import threading
 import os
 import json
+import cv2
+import numpy as np
 from batch_processor import OMRBatchProcessor
 from generate_batch_sheets import generate_mass_omr_sheets
 
