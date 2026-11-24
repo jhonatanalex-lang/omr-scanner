@@ -1,0 +1,1705 @@
+{
+  "sheet_code": "OMR-2026-0001",
+  "format": "A4_landscape",
+  "bubble_radius_mm": 2.4,
+  "marker_size_mm": 8.0,
+  "sections": {
+    "identification": {
+      "num_digits": 8,
+      "bubbles": [
+        {
+          "digit_index": 0,
+          "value": 0,
+          "norm_x": 0.13061,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 0,
+          "value": 1,
+          "norm_x": 0.13061,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 0,
+          "value": 2,
+          "norm_x": 0.13061,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 0,
+          "value": 3,
+          "norm_x": 0.13061,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 0,
+          "value": 4,
+          "norm_x": 0.13061,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 0,
+          "value": 5,
+          "norm_x": 0.13061,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 0,
+          "value": 6,
+          "norm_x": 0.13061,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 0,
+          "value": 7,
+          "norm_x": 0.13061,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 0,
+          "value": 8,
+          "norm_x": 0.13061,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 0,
+          "value": 9,
+          "norm_x": 0.13061,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 1,
+          "value": 0,
+          "norm_x": 0.20816,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 1,
+          "value": 1,
+          "norm_x": 0.20816,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 1,
+          "value": 2,
+          "norm_x": 0.20816,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 1,
+          "value": 3,
+          "norm_x": 0.20816,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 1,
+          "value": 4,
+          "norm_x": 0.20816,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 1,
+          "value": 5,
+          "norm_x": 0.20816,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 1,
+          "value": 6,
+          "norm_x": 0.20816,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 1,
+          "value": 7,
+          "norm_x": 0.20816,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 1,
+          "value": 8,
+          "norm_x": 0.20816,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 1,
+          "value": 9,
+          "norm_x": 0.20816,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 2,
+          "value": 0,
+          "norm_x": 0.28571,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 2,
+          "value": 1,
+          "norm_x": 0.28571,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 2,
+          "value": 2,
+          "norm_x": 0.28571,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 2,
+          "value": 3,
+          "norm_x": 0.28571,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 2,
+          "value": 4,
+          "norm_x": 0.28571,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 2,
+          "value": 5,
+          "norm_x": 0.28571,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 2,
+          "value": 6,
+          "norm_x": 0.28571,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 2,
+          "value": 7,
+          "norm_x": 0.28571,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 2,
+          "value": 8,
+          "norm_x": 0.28571,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 2,
+          "value": 9,
+          "norm_x": 0.28571,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 3,
+          "value": 0,
+          "norm_x": 0.36327,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 3,
+          "value": 1,
+          "norm_x": 0.36327,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 3,
+          "value": 2,
+          "norm_x": 0.36327,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 3,
+          "value": 3,
+          "norm_x": 0.36327,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 3,
+          "value": 4,
+          "norm_x": 0.36327,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 3,
+          "value": 5,
+          "norm_x": 0.36327,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 3,
+          "value": 6,
+          "norm_x": 0.36327,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 3,
+          "value": 7,
+          "norm_x": 0.36327,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 3,
+          "value": 8,
+          "norm_x": 0.36327,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 3,
+          "value": 9,
+          "norm_x": 0.36327,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 4,
+          "value": 0,
+          "norm_x": 0.44082,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 4,
+          "value": 1,
+          "norm_x": 0.44082,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 4,
+          "value": 2,
+          "norm_x": 0.44082,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 4,
+          "value": 3,
+          "norm_x": 0.44082,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 4,
+          "value": 4,
+          "norm_x": 0.44082,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 4,
+          "value": 5,
+          "norm_x": 0.44082,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 4,
+          "value": 6,
+          "norm_x": 0.44082,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 4,
+          "value": 7,
+          "norm_x": 0.44082,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 4,
+          "value": 8,
+          "norm_x": 0.44082,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 4,
+          "value": 9,
+          "norm_x": 0.44082,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 5,
+          "value": 0,
+          "norm_x": 0.51837,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 5,
+          "value": 1,
+          "norm_x": 0.51837,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 5,
+          "value": 2,
+          "norm_x": 0.51837,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 5,
+          "value": 3,
+          "norm_x": 0.51837,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 5,
+          "value": 4,
+          "norm_x": 0.51837,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 5,
+          "value": 5,
+          "norm_x": 0.51837,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 5,
+          "value": 6,
+          "norm_x": 0.51837,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 5,
+          "value": 7,
+          "norm_x": 0.51837,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 5,
+          "value": 8,
+          "norm_x": 0.51837,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 5,
+          "value": 9,
+          "norm_x": 0.51837,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 6,
+          "value": 0,
+          "norm_x": 0.59592,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 6,
+          "value": 1,
+          "norm_x": 0.59592,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 6,
+          "value": 2,
+          "norm_x": 0.59592,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 6,
+          "value": 3,
+          "norm_x": 0.59592,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 6,
+          "value": 4,
+          "norm_x": 0.59592,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 6,
+          "value": 5,
+          "norm_x": 0.59592,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 6,
+          "value": 6,
+          "norm_x": 0.59592,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 6,
+          "value": 7,
+          "norm_x": 0.59592,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 6,
+          "value": 8,
+          "norm_x": 0.59592,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 6,
+          "value": 9,
+          "norm_x": 0.59592,
+          "norm_y": 0.39045
+        },
+        {
+          "digit_index": 7,
+          "value": 0,
+          "norm_x": 0.67347,
+          "norm_y": 0.76966
+        },
+        {
+          "digit_index": 7,
+          "value": 1,
+          "norm_x": 0.67347,
+          "norm_y": 0.72753
+        },
+        {
+          "digit_index": 7,
+          "value": 2,
+          "norm_x": 0.67347,
+          "norm_y": 0.68539
+        },
+        {
+          "digit_index": 7,
+          "value": 3,
+          "norm_x": 0.67347,
+          "norm_y": 0.64326
+        },
+        {
+          "digit_index": 7,
+          "value": 4,
+          "norm_x": 0.67347,
+          "norm_y": 0.60112
+        },
+        {
+          "digit_index": 7,
+          "value": 5,
+          "norm_x": 0.67347,
+          "norm_y": 0.55899
+        },
+        {
+          "digit_index": 7,
+          "value": 6,
+          "norm_x": 0.67347,
+          "norm_y": 0.51685
+        },
+        {
+          "digit_index": 7,
+          "value": 7,
+          "norm_x": 0.67347,
+          "norm_y": 0.47472
+        },
+        {
+          "digit_index": 7,
+          "value": 8,
+          "norm_x": 0.67347,
+          "norm_y": 0.43258
+        },
+        {
+          "digit_index": 7,
+          "value": 9,
+          "norm_x": 0.67347,
+          "norm_y": 0.39045
+        }
+      ]
+    },
+    "answers": {
+      "total_questions": 40,
+      "options": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "bubbles": [
+        {
+          "question": 1,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 1,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 1,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 1,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 1,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 2,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 2,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 2,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 2,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 2,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 3,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 3,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 3,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 3,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 3,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 4,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 4,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 4,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 4,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 4,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 5,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 5,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 5,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 5,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 5,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 6,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 6,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 6,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 6,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 6,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 7,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 7,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 7,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 7,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 7,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 8,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 8,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 8,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 8,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 8,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 9,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.6
+        },
+        {
+          "question": 9,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.6
+        },
+        {
+          "question": 9,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.6
+        },
+        {
+          "question": 9,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.6
+        },
+        {
+          "question": 9,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.6
+        },
+        {
+          "question": 10,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 10,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 10,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 10,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 10,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 11,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 11,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 11,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 11,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 11,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 12,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 12,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 12,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 12,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 12,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 13,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 13,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 13,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 13,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 13,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 14,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 14,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 14,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 14,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 14,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 15,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 15,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 15,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 15,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 15,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 16,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 16,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 16,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 16,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 16,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 17,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 17,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 17,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 17,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 17,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 18,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 18,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 18,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 18,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 18,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 19,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 19,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 19,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 19,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 19,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 20,
+          "option": "A",
+          "norm_x": 0.15102,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 20,
+          "option": "B",
+          "norm_x": 0.19347,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 20,
+          "option": "C",
+          "norm_x": 0.23592,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 20,
+          "option": "D",
+          "norm_x": 0.27837,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 20,
+          "option": "E",
+          "norm_x": 0.32082,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 21,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 21,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 21,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 21,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 21,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.88764
+        },
+        {
+          "question": 22,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 22,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 22,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 22,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 22,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.85169
+        },
+        {
+          "question": 23,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 23,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 23,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 23,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 23,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.81573
+        },
+        {
+          "question": 24,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 24,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 24,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 24,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 24,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.77978
+        },
+        {
+          "question": 25,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 25,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 25,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 25,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 25,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.74382
+        },
+        {
+          "question": 26,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 26,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 26,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 26,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 26,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.70787
+        },
+        {
+          "question": 27,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 27,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 27,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 27,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 27,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.67191
+        },
+        {
+          "question": 28,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 28,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 28,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 28,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 28,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.63596
+        },
+        {
+          "question": 29,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.6
+        },
+        {
+          "question": 29,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.6
+        },
+        {
+          "question": 29,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.6
+        },
+        {
+          "question": 29,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.6
+        },
+        {
+          "question": 29,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.6
+        },
+        {
+          "question": 30,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 30,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 30,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 30,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 30,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.56404
+        },
+        {
+          "question": 31,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 31,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 31,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 31,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 31,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.52809
+        },
+        {
+          "question": 32,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 32,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 32,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 32,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 32,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.49213
+        },
+        {
+          "question": 33,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 33,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 33,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 33,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 33,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.45618
+        },
+        {
+          "question": 34,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 34,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 34,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 34,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 34,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.42022
+        },
+        {
+          "question": 35,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 35,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 35,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 35,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 35,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.38427
+        },
+        {
+          "question": 36,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 36,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 36,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 36,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 36,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.34831
+        },
+        {
+          "question": 37,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 37,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 37,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 37,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 37,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.31236
+        },
+        {
+          "question": 38,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 38,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 38,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 38,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 38,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.2764
+        },
+        {
+          "question": 39,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 39,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 39,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 39,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 39,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.24045
+        },
+        {
+          "question": 40,
+          "option": "A",
+          "norm_x": 0.51837,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 40,
+          "option": "B",
+          "norm_x": 0.56082,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 40,
+          "option": "C",
+          "norm_x": 0.60327,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 40,
+          "option": "D",
+          "norm_x": 0.64571,
+          "norm_y": 0.20449
+        },
+        {
+          "question": 40,
+          "option": "E",
+          "norm_x": 0.68816,
+          "norm_y": 0.20449
+        }
+      ]
+    }
+  }
+}
