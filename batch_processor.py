@@ -385,7 +385,11 @@ class OMRBatchProcessor:
                 if not code_id:
                     # Intentar leer código de barras en la imagen alineada
                     b_al = pyzbar.decode(aligned_l)
-                    if b_al: code_id = b_al[0].data.decode('utf-8')
+                    if b_al: 
+                        code_id = b_al[0].data.decode('utf-8')
+                    elif sync_id_left is not None:
+                        # Si no hay código de barras tradicional, usar el correlativo óptico antifraude
+                        code_id = f"OMR-2026-{sync_id_left:04d}"
                 if code_id and student_id:
                     self.register_identification(code_id, student_id, sync_id=sync_id_left)
                     print(f"   [Pág {page_idx+1}] Identificación registrada: {code_id} -> DNI: {student_id} (Sync: {sync_id_left})")
@@ -400,7 +404,11 @@ class OMRBatchProcessor:
                 sync_id_right = self.engine.read_sync_strip(aligned_r, section_name="answers")
                 if not code_ans:
                     b_ar = pyzbar.decode(aligned_r)
-                    if b_ar: code_ans = b_ar[0].data.decode('utf-8')
+                    if b_ar: 
+                        code_ans = b_ar[0].data.decode('utf-8')
+                    elif sync_id_right is not None:
+                        # Si no hay código de barras tradicional, usar el correlativo óptico antifraude
+                        code_ans = f"OMR-2026-{sync_id_right:04d}"
                 if code_ans and answers:
                     # Guardar la imagen escaneada y alineada real para el auditor visual
                     os.makedirs("scanned_alignments", exist_ok=True)

@@ -27,11 +27,10 @@ def draw_fiducial_markers(c, x_min, y_min, x_max, y_max, size):
     c.rect(x_min, y_max - size, size, size, fill=1, stroke=0)
     c.rect(x_max - size, y_max - size, size, size, fill=1, stroke=0)
 
-def draw_sync_strip(c, center_x, start_y, bit_spacing, num_bits, bit_val_int):
+def draw_sync_strip(c, center_x, start_y, bit_spacing, num_bits, bit_val_int, sheet_code=""):
     """
-    Dibuja una columna vertical de bits ópticos (16 bits).
-    Las burbujas con bit=1 se rellenan en negro sólido.
-    Las burbujas con bit=0 quedan vacías.
+    Dibuja una columna vertical de bits ópticos (16 bits) flanqueando la línea de corte.
+    Incluye advertencia vertical y el código correlativo de la ficha impreso en el mismo sentido.
     """
     strip_h = (num_bits - 1) * bit_spacing + 8 * MM
     strip_w = 6.0 * MM
@@ -41,13 +40,23 @@ def draw_sync_strip(c, center_x, start_y, bit_spacing, num_bits, bit_val_int):
     c.setLineWidth(0.6)
     c.roundRect(center_x - strip_w / 2.0, start_y - (num_bits - 1) * bit_spacing - 4 * MM, strip_w, strip_h, 3 * MM, stroke=1, fill=0)
     
-    # Texto vertical de advertencia
+    # Texto vertical de advertencia y código correlativo
     c.saveState()
+    mid_y = start_y - ((num_bits - 1) * bit_spacing) / 2.0
+    c.translate(center_x - 3.8 * MM, mid_y)
+    c.rotate(90)
+    
+    # Parte inferior: "NO ESCRIBA EN ESTA AREA" en rojo
     c.setFont("Helvetica-Bold", 4.5)
     c.setFillColor(colors.HexColor("#CC0000"))
-    c.translate(center_x - 3.8 * MM, start_y - ((num_bits - 1) * bit_spacing) / 2.0)
-    c.rotate(90)
-    c.drawCentredString(0, 0, "NO ESCRIBA EN ESTA AREA")
+    c.drawCentredString(-24 * MM, 0, "NO ESCRIBA EN ESTA AREA")
+    
+    # Parte superior: "CÓDIGO: {sheet_code}" en negro
+    if sheet_code:
+        c.setFont("Helvetica-Bold", 5.5)
+        c.setFillColor(colors.black)
+        c.drawCentredString(24 * MM, 0, f"CÓDIGO: {sheet_code}")
+        
     c.restoreState()
     
     bit_bubbles = []
@@ -109,22 +118,13 @@ def draw_single_omr_page(c, sheet_code, sheet_id_number, coords_cache=None):
     
     # Encabezado Identificación
     c.setFillColor(colors.black)
-    c.setFont("Helvetica-Bold", 9.5)
-    c.drawCentredString((left_x_min + left_x_max - 5 * MM) / 2.0, left_y_max - 5.5 * MM, "FICHA DE IDENTIFICACIÓN")
-    
-    # Código de barras centrado
-    barcode_id = code128.Code128(sheet_code, barHeight=5.5 * MM, barWidth=0.75, quiet=0)
-    barcode_w = barcode_id.width
-    barcode_x_id = ((left_x_min + left_x_max - 5 * MM) / 2.0) - (barcode_w / 2.0)
-    barcode_id.drawOn(c, barcode_x_id, left_y_max - 13.5 * MM)
-    
-    c.setFont("Helvetica", 6)
-    c.drawCentredString((left_x_min + left_x_max - 5 * MM) / 2.0, left_y_max - 16 * MM, f"CÓDIGO: {sheet_code}")
+    c.setFont("Helvetica-Bold", 10)
+    c.drawCentredString((left_x_min + left_x_max - 5 * MM) / 2.0, left_y_max - 6.0 * MM, "FICHA DE IDENTIFICACIÓN")
     
     # Bloque Manuscrito
     box_w = (left_x_max - left_x_min) - 22 * MM
     box_x = left_x_min + 9 * MM
-    cur_y = left_y_max - 20 * MM
+    cur_y = left_y_max - 13.5 * MM
     
     c.setLineWidth(0.6)
     c.setStrokeColor(colors.black)
@@ -192,7 +192,7 @@ def draw_single_omr_page(c, sheet_code, sheet_id_number, coords_cache=None):
     
     # 1. Tira Binaria en Identificación
     left_sync_x = cut_x - 8 * MM
-    left_bits = draw_sync_strip(c, left_sync_x, SYNC_START_Y, SYNC_SPACING, NUM_SYNC_BITS, sheet_id_number)
+    left_bits = draw_sync_strip(c, left_sync_x, SYNC_START_Y, SYNC_SPACING, NUM_SYNC_BITS, sheet_id_number, sheet_code=sheet_code)
     
     if coords_cache is not None and len(coords_cache["sync_bits_id"]) < NUM_SYNC_BITS:
         for lb in left_bits:
@@ -217,7 +217,7 @@ def draw_single_omr_page(c, sheet_code, sheet_id_number, coords_cache=None):
     
     # 2. Tira Binaria en Respuestas (simétrica gemela)
     right_sync_x = cut_x + 8 * MM
-    right_bits = draw_sync_strip(c, right_sync_x, SYNC_START_Y, SYNC_SPACING, NUM_SYNC_BITS, sheet_id_number)
+    right_bits = draw_sync_strip(c, right_sync_x, SYNC_START_Y, SYNC_SPACING, NUM_SYNC_BITS, sheet_id_number, sheet_code=sheet_code)
     
     if coords_cache is not None and len(coords_cache["sync_bits_ans"]) < NUM_SYNC_BITS:
         for rb in right_bits:
@@ -229,12 +229,6 @@ def draw_single_omr_page(c, sheet_code, sheet_id_number, coords_cache=None):
     c.setFillColor(colors.black)
     c.setFont("Helvetica-Bold", 11)
     c.drawString(right_x_min + 16 * MM, right_y_max - 6 * MM, "HOJA DE RESPUESTAS")
-    
-    barcode_ans = code128.Code128(sheet_code, barHeight=5.5 * MM, barWidth=0.8, quiet=0)
-    barcode_ans_x = right_x_max - 52 * MM
-    barcode_ans.drawOn(c, barcode_ans_x, right_y_max - 13.5 * MM)
-    c.setFont("Helvetica-Bold", 6.5)
-    c.drawRightString(right_x_max - 12 * MM, right_y_max - 6 * MM, f"CÓDIGO: {sheet_code}")
     
     # Tema (P, Q, R, S, T, U)
     theme_y = right_y_max - 18 * MM
