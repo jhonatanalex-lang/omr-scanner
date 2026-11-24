@@ -1,10 +1,16 @@
 """
-Aplicación de Escritorio OMR (Desktop GUI)
-Permite:
-  1. Cargar clave de examen personalizada (o generar una automática).
-  2. Procesar en lote archivos PDF o carpetas de fichas escaneadas.
-  3. Visualizar el progreso de conciliación en tiempo real.
-  4. Exportar el cuadro consolidado de notas a Excel con un solo clic.
+Aplicación de Escritorio OMR (Desktop GUI) - Versión Completa
+Pestañas:
+  1. Calificador de Lotes:
+     - Selección de clave y pesos.
+     - Carga de PDF escaneado con barra de progreso.
+     - Tabla interactiva de resultados y conciliación.
+     - Exportación a Excel.
+  2. Generador Masivo para Impresión:
+     - Configuración de prefijo (ej: OMR-2026).
+     - Número de inicio (ej: 1).
+     - Cantidad de hojas a imprimir (ej: 100, 300, 500).
+     - Generación instantánea de PDF multipágina listo para imprenta.
 """
 
 import tkinter as tk
@@ -13,13 +19,14 @@ import threading
 import os
 import json
 from batch_processor import OMRBatchProcessor
+from generate_batch_sheets import generate_mass_omr_sheets
 
 class OMRApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("OMR Grader Suite - Calificador de Fichas Desglosables")
-        self.root.geometry("820x620")
-        self.root.minsize(700, 500)
+        self.root.title("OMR Grader Suite - Calificador de Fichas Oficiales (30/70)")
+        self.root.geometry("860x650")
+        self.root.minsize(750, 550)
         
         self.processor = OMRBatchProcessor(db_path="omr_production.db")
         self.setup_ui()
@@ -32,22 +39,34 @@ class OMRApp:
         header = tk.Frame(self.root, bg="#1F4E79", height=65)
         header.pack(fill=tk.X, side=tk.TOP)
         header_title = tk.Label(
-            header, text="Sistema de Calificación OMR", 
-            fg="white", bg="#1F4E79", font=("Segoe UI", 16, "bold")
+            header, text="Sistema de Calificación OMR (80 Preguntas)", 
+            fg="white", bg="#1F4E79", font=("Segoe UI", 15, "bold")
         )
         header_title.pack(anchor="w", padx=20, pady=(10, 2))
         header_sub = tk.Label(
-            header, text="Conciliación de Identificación & Respuestas Desglosables", 
-            fg="#D9E1F2", bg="#1F4E79", font=("Segoe UI", 9)
+            header, text="Fichas Desglosables 30/70 • Código de Barras Code128 • SQLite • Excel", 
+            fg="#D9E1F2", bg="#1F4E79", font=("Segoe UI", 8.5)
         )
         header_sub.pack(anchor="w", padx=20, pady=(0, 10))
 
-        # Main container
-        main = ttk.Frame(self.root, padding=15)
-        main.pack(fill=tk.BOTH, expand=True)
+        # Notebook (Pestañas)
+        notebook = ttk.Notebook(self.root)
+        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # Panel de Configuración y Clave
-        cfg_frame = ttk.LabelFrame(main, text=" 1. Clave de Respuestas y Puntuación ", padding=10)
+        # Tab 1: Calificación
+        tab_grade = ttk.Frame(notebook, padding=12)
+        notebook.add(tab_grade, text=" 📊 Calificar Exámenes ")
+
+        # Tab 2: Generador Masivo
+        tab_generate = ttk.Frame(notebook, padding=15)
+        notebook.add(tab_generate, text=" 🖨️ Generar Hojas para Imprenta ")
+
+        self._setup_grading_tab(tab_grade)
+        self._setup_generator_tab(tab_generate)
+
+    def _setup_grading_tab(self, parent):
+        # Panel 1: Configuración de Clave
+        cfg_frame = ttk.LabelFrame(parent, text=" 1. Clave de Respuestas y Puntuación ", padding=10)
         cfg_frame.pack(fill=tk.X, pady=(0, 10))
 
         row1 = ttk.Frame(cfg_frame)
@@ -60,37 +79,34 @@ class OMRApp:
         self.incorrect_score_var = tk.StringVar(value="-0.25")
         ttk.Entry(row1, textvariable=self.incorrect_score_var, width=6).pack(side=tk.LEFT, padx=(0, 15))
 
-        ttk.Label(row1, text="Clave rápida (ej: 40 preguntas):").pack(side=tk.LEFT, padx=(0, 5))
-        self.quick_key_btn = ttk.Button(row1, text="Cargar Clave Ejemplo", command=self.load_sample_key)
+        self.quick_key_btn = ttk.Button(row1, text="Cargar Clave 80 Preguntas", command=self.load_sample_key)
         self.quick_key_btn.pack(side=tk.LEFT)
 
-        # Panel de Procesamiento por Lotes
-        batch_frame = ttk.LabelFrame(main, text=" 2. Procesamiento de Fichas Escaneadas ", padding=10)
+        # Panel 2: Archivo Escaneado
+        batch_frame = ttk.LabelFrame(parent, text=" 2. Ingesta de Fichas Escaneadas (PDF o Imágenes) ", padding=10)
         batch_frame.pack(fill=tk.X, pady=(0, 10))
 
         row2 = ttk.Frame(batch_frame)
         row2.pack(fill=tk.X, pady=2)
-        ttk.Label(row2, text="Archivo PDF Escaneado:").pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Label(row2, text="Archivo PDF:").pack(side=tk.LEFT, padx=(0, 5))
         self.file_path_var = tk.StringVar(value="")
-        self.file_entry = ttk.Entry(row2, textvariable=self.file_path_var, width=45)
-        self.file_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        ttk.Entry(row2, textvariable=self.file_path_var, width=45).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
         
         ttk.Button(row2, text="Examinar...", command=self.browse_pdf).pack(side=tk.LEFT, padx=(0, 5))
         self.process_btn = ttk.Button(row2, text="▶ Calificar Lote", command=self.start_processing)
         self.process_btn.pack(side=tk.LEFT)
 
-        # Barra de progreso
         self.progress_bar = ttk.Progressbar(batch_frame, mode="determinate")
         self.progress_bar.pack(fill=tk.X, pady=(8, 0))
         self.status_lbl = ttk.Label(batch_frame, text="Listo para procesar.")
         self.status_lbl.pack(anchor="w", pady=(4, 0))
 
-        # Panel de Resultados
-        results_frame = ttk.LabelFrame(main, text=" 3. Resultados y Conciliación ", padding=10)
+        # Panel 3: Resultados
+        results_frame = ttk.LabelFrame(parent, text=" 3. Resultados Consolidados ", padding=10)
         results_frame.pack(fill=tk.BOTH, expand=True)
 
         columns = ("pos", "code", "dni", "correct", "incorrect", "blank", "score", "status")
-        self.tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=8)
+        self.tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=7)
         self.tree.heading("pos", text="#")
         self.tree.heading("code", text="Código Hoja")
         self.tree.heading("dni", text="DNI / Estudiante")
@@ -100,12 +116,12 @@ class OMRApp:
         self.tree.heading("score", text="Nota Final")
         self.tree.heading("status", text="Estado Conciliación")
 
-        self.tree.column("pos", width=40, anchor="center")
+        self.tree.column("pos", width=35, anchor="center")
         self.tree.column("code", width=110, anchor="center")
-        self.tree.column("dni", width=120, anchor="center")
-        self.tree.column("correct", width=80, anchor="center")
-        self.tree.column("incorrect", width=80, anchor="center")
-        self.tree.column("blank", width=80, anchor="center")
+        self.tree.column("dni", width=110, anchor="center")
+        self.tree.column("correct", width=75, anchor="center")
+        self.tree.column("incorrect", width=75, anchor="center")
+        self.tree.column("blank", width=75, anchor="center")
         self.tree.column("score", width=80, anchor="center")
         self.tree.column("status", width=160, anchor="center")
 
@@ -114,20 +130,54 @@ class OMRApp:
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Botón de exportación
-        footer = ttk.Frame(main)
-        footer.pack(fill=tk.X, pady=(10, 0))
-        self.export_btn = ttk.Button(footer, text="📥 Exportar a Excel (.xlsx)", command=self.export_excel)
-        self.export_btn.pack(side=tk.RIGHT)
+        footer = ttk.Frame(parent)
+        footer.pack(fill=tk.X, pady=(8, 0))
+        ttk.Button(footer, text="📥 Exportar Resultados a Excel (.xlsx)", command=self.export_excel).pack(side=tk.RIGHT)
+
+    def _setup_generator_tab(self, parent):
+        box = ttk.LabelFrame(parent, text=" Configuración de Serialización Masiva para Impresión ", padding=20)
+        box.pack(fill=tk.BOTH, expand=True)
+
+        info = ttk.Label(
+            box, 
+            text="Esta herramienta genera un único archivo PDF listo para enviar a la imprenta o fotocopiadora.\n"
+                 "Cada página A4 tendrá su código correlativo único y sus dos códigos de barras Code128 correspondientes.",
+            font=("Segoe UI", 9)
+        )
+        info.pack(anchor="w", pady=(0, 20))
+
+        grid = ttk.Frame(box)
+        grid.pack(fill=tk.X, pady=5)
+
+        ttk.Label(grid, text="Prefijo del Examen:").grid(row=0, column=0, sticky="w", pady=6)
+        self.prefix_var = tk.StringVar(value="OMR-2026")
+        ttk.Entry(grid, textvariable=self.prefix_var, width=15).grid(row=0, column=1, sticky="w", padx=10, pady=6)
+
+        ttk.Label(grid, text="Número Inicial:").grid(row=1, column=0, sticky="w", pady=6)
+        self.start_num_var = tk.StringVar(value="1")
+        ttk.Entry(grid, textvariable=self.start_num_var, width=15).grid(row=1, column=1, sticky="w", padx=10, pady=6)
+
+        ttk.Label(grid, text="Cantidad de Hojas a Imprimir:").grid(row=2, column=0, sticky="w", pady=6)
+        self.qty_var = tk.StringVar(value="100")
+        ttk.Entry(grid, textvariable=self.qty_var, width=15).grid(row=2, column=1, sticky="w", padx=10, pady=6)
+
+        self.gen_progress = ttk.Progressbar(box, mode="determinate")
+        self.gen_progress.pack(fill=tk.X, pady=(20, 5))
+        self.gen_status_lbl = ttk.Label(box, text="Listo para generar.")
+        self.gen_status_lbl.pack(anchor="w", pady=(0, 15))
+
+        btn_row = ttk.Frame(box)
+        btn_row.pack(fill=tk.X)
+        self.generate_btn = ttk.Button(btn_row, text="📄 Generar Lote PDF para Impresión", command=self.start_mass_generation)
+        self.generate_btn.pack(side=tk.LEFT)
 
     def load_sample_key(self):
-        # Clave estándar para 40 preguntas
-        self.teacher_key = {f"Q{i:02d}": ['A', 'B', 'C', 'D', 'E'][(i - 1) % 5] for i in range(1, 41)}
-        messagebox.showinfo("Clave Cargada", "Se ha cargado la clave de respuestas para 40 preguntas.")
+        self.teacher_key = {f"Q{i:02d}": ['A', 'B', 'C', 'D', 'E'][(i - 1) % 5] for i in range(1, 81)}
+        messagebox.showinfo("Clave Cargada", "Se ha cargado la clave de respuestas para 80 preguntas.")
 
     def browse_pdf(self):
         filename = filedialog.askopenfilename(
-            title="Seleccionar PDF de Fichas Escaneadas",
+            title="Seleccionar PDF Escaneado",
             filetypes=[("Archivos PDF", "*.pdf"), ("Imágenes", "*.png;*.jpg;*.jpeg")]
         )
         if filename:
@@ -143,16 +193,14 @@ class OMRApp:
             self.load_sample_key()
             
         self.process_btn.config(state=tk.DISABLED)
-        self.status_lbl.config(text="Procesando fichas con OpenCV...")
-        self.progress_bar["value"] = 10
+        self.status_lbl.config(text="Procesando fichas con OpenCV y SQLite...")
+        self.progress_bar["value"] = 30
         
         threading.Thread(target=self._process_worker, args=(file_path,), daemon=True).start()
 
     def _process_worker(self, file_path):
         try:
-            # Procesar usando el engine y processor ya probados
-            # Si es el master generado o escaneado, procesar páginas
-            self.progress_bar["value"] = 50
+            self.progress_bar["value"] = 60
             results = self.processor.reconcile_and_grade(
                 self.teacher_key, 
                 score_correct=float(self.correct_score_var.get()),
@@ -160,13 +208,13 @@ class OMRApp:
             )
             self.root.after(0, self._update_table, results)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error de Procesamiento", str(e)))
+            self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
         finally:
             self.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
 
     def _update_table(self, results):
         self.progress_bar["value"] = 100
-        self.status_lbl.config(text=f"Procesamiento finalizado. {len(results)} registros procesados.")
+        self.status_lbl.config(text=f"Finalizado. {len(results)} registros procesados.")
         for item in self.tree.get_children():
             self.tree.delete(item)
             
@@ -182,7 +230,55 @@ class OMRApp:
             path = self.processor.export_to_excel("resultados_examen.xlsx")
             messagebox.showinfo("Exportación Exitosa", f"Archivo generado:\n{os.path.abspath(path)}")
         except Exception as e:
-            messagebox.showerror("Error al Exportar", str(e))
+            messagebox.showerror("Error", str(e))
+
+    def start_mass_generation(self):
+        try:
+            prefix = self.prefix_var.get().strip()
+            start_num = int(self.start_num_var.get())
+            qty = int(self.qty_var.get())
+        except ValueError:
+            messagebox.showerror("Datos inválidos", "Número inicial y cantidad deben ser números enteros.")
+            return
+
+        save_path = filedialog.asksaveasfilename(
+            title="Guardar PDF de Lote",
+            defaultextension=".pdf",
+            initialfile=f"lote_impresion_{qty}_fichas.pdf",
+            filetypes=[("Archivos PDF", "*.pdf")]
+        )
+        if not save_path:
+            return
+
+        self.generate_btn.config(state=tk.DISABLED)
+        self.gen_status_lbl.config(text=f"Generando {qty} páginas vectoriales en PDF...")
+        self.gen_progress["value"] = 0
+
+        def _worker():
+            try:
+                def prog(cur, total):
+                    pct = int((cur / total) * 100)
+                    self.root.after(0, lambda: self.gen_progress.configure(value=pct))
+                    self.root.after(0, lambda: self.gen_status_lbl.configure(text=f"Generando página {cur} de {total}..."))
+
+                generate_mass_omr_sheets(
+                    output_pdf=save_path,
+                    prefix=prefix,
+                    start_num=start_num,
+                    quantity=qty,
+                    progress_callback=prog
+                )
+                self.root.after(0, lambda: messagebox.showinfo(
+                    "Lote Generado con Éxito", 
+                    f"Se ha generado el archivo PDF con {qty} páginas correlativas:\n{os.path.abspath(save_path)}"
+                ))
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
+            finally:
+                self.root.after(0, lambda: self.generate_btn.config(state=tk.NORMAL))
+                self.root.after(0, lambda: self.gen_status_lbl.config(text="Listo."))
+
+        threading.Thread(target=_worker, daemon=True).start()
 
 if __name__ == "__main__":
     root = tk.Tk()

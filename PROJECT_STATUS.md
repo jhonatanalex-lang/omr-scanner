@@ -1,7 +1,7 @@
 # Proyecto OMR - Calificación de Fichas Desglosables Oficiales (Versión 30/70)
 
 ## 📌 Resumen del Proyecto y Contexto
-Sistema integral de grado de producción para el diseño, escaneo, lectura, calificación y conciliación de **hojas OMR (Optical Mark Recognition)** en exámenes masivos. Cuenta con soporte oficial para fichas de 80 preguntas en proporción 30% / 70%, selección de tema (P, Q, R, S, T, U), DNI de 8 dígitos y códigos de barras Code128 con zona de silencio de seguridad fiduciaria.
+Sistema integral de grado de producción para el diseño, generación masiva serializada, escaneo, lectura, calificación y conciliación de **hojas OMR (Optical Mark Recognition)** en exámenes masivos. Cuenta con soporte oficial para fichas de 80 preguntas en proporción 30% / 70%, selección de tema (P, Q, R, S, T, U), DNI de 8 dígitos y códigos de barras Code128 con zona de silencio de seguridad fiduciaria.
 
 ---
 
@@ -30,21 +30,24 @@ Sistema integral de grado de producción para el diseño, escaneo, lectura, cali
 
 ---
 
-## 🧪 Pruebas y Métricas Verificadas
-Ejecutadas con `test_pipeline.py` simulando escaneo real a 300 DPI y corte físico:
-- **Detección Fiduciaria:** Exactamente 4 de 4 esquinas detectadas en ambas mitades (0 interferencia con el código de barras).
-- **Lectura de Código de Barras:** Identificación y Respuestas decodificadas al 100% (`OMR-2026-0001`).
-- **DNI Estudiante:** `72910483` decodificado al **100%**.
-- **Tema de Examen:** `R` detectado al **100%**.
-- **Preguntas:** **80 de 80 preguntas reconocidas con exactitud (100.0%)**.
-- **Conciliación en Base de Datos:** `MATCHED` y calificada en SQLite.
+## 🖨️ Generación Masiva Serializada (`generate_batch_sheets.py`)
+- Permite generar un único PDF multipágina listo para enviar a la imprenta con N hojas correlativas (ej: 100, 300 o 500 exámenes).
+- Cada página recibe su código único correlativo (`OMR-2026-0001`, `OMR-2026-0002`, etc.) impreso en código de barras en ambas mitades desglosables.
 
 ---
 
-## 💻 Aplicación de Escritorio (`app_gui.py`)
+## 💻 Aplicación de Escritorio Interactiva (`app_gui.py`)
+La aplicación cuenta ahora con dos pestañas de trabajo:
+1. **📊 Calificar Exámenes:**
+   - Permite cargar clave para 80 preguntas.
+   - Procesar PDF o imágenes escaneadas en lote.
+   - Tabla de resultados en vivo y exportación a Excel (.xlsx).
+2. **🖨️ Generar Hojas para Imprenta:**
+   - Interfaz visual para ingresar el prefijo, número inicial y cantidad de hojas a generar.
+   - Barra de progreso interactiva y guardado del PDF para imprenta.
+
 Ejecutable mediante:
 ```cmd
 cd /d "D:\COPIAR ZIPLANE"
 python app_gui.py
 ```
-Permite cargar la clave de 80 preguntas, procesar el lote escaneado y exportar el acta de notas a Excel.
