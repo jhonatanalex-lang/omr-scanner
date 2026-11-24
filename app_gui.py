@@ -366,14 +366,13 @@ class OMRApp:
         h_bar.pack(side=tk.BOTTOM, fill=tk.X)
         cv.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Generar o cargar imagen de auditoría
+        # Generar o cargar imagen de auditoría sobre la hoja real del alumno
         try:
-            # Obtener respuestas del estudiante desde la base de datos
             import sqlite3
             from PIL import Image, ImageTk
             conn = sqlite3.connect(self.processor.db_path)
             cur = conn.cursor()
-            cur.execute("SELECT answers_json FROM answer_sheets WHERE sheet_code = ?", (sheet_code,))
+            cur.execute("SELECT answers_json, aligned_image_path FROM answer_sheets WHERE sheet_code = ?", (sheet_code,))
             row = cur.fetchone()
             conn.close()
             
@@ -382,31 +381,40 @@ class OMRApp:
             else:
                 st_answers = {}
                 
-            # Clave según tema
+            real_img_path = row[1] if row and len(row) > 1 and row[1] else None
+            
+            # Obtener la clave respectiva según el tema del alumno
             t_key = self.teacher_key.get(theme) if isinstance(self.teacher_key, dict) and theme in self.teacher_key else self.teacher_key
             if isinstance(t_key, dict) and any(k in ["P", "Q", "R", "S", "T", "U"] for k in t_key.keys()):
                 t_key = t_key.get("P", {})
                 
-            # Cargar imagen alineada guardada o simulación
-            img_path = "debug_audit_overlay.png"
-            if not os.path.exists(img_path):
-                # Generar una de muestra si aún no existe
-                engine = self.processor.engine
-                dummy_img = np.ones((1500, 1500, 3), dtype=np.uint8) * 255
-                overlay = engine.generate_audit_overlay(dummy_img, st_answers, t_key)
-                cv2.imwrite(img_path, overlay)
+            engine = self.processor.engine
+            
+            if real_img_path and os.path.exists(real_img_path):
+                # Usar la imagen escaneada REAL del alumno
+                base_img = cv2.imread(real_img_path)
+            else:
+                # Si no tiene imagen escaneada, usar fondo blanco neutro
+                base_img = np.ones((1500, 1500, 3), dtype=np.uint8) * 255
                 
-            pil_img = Image.open(img_path)
-            # Escalar a tamaño de visualización
-            disp_w = 750
+            # Generar overlay dinámico con las respuestas reales de este examen
+            audit_overlay = engine.generate_audit_overlay(base_img, st_answers, t_key)
+            
+            # Guardar temporal para visualización
+            os.makedirs("temp_preview", exist_ok=True)
+            temp_overlay_path = os.path.join("temp_preview", f"audit_{sheet_code}.png")
+            cv2.imwrite(temp_overlay_path, audit_overlay)
+                
+            pil_img = Image.open(temp_overlay_path)
+            # Escalar a tamaño de visualización ergonómico
+            disp_w = 800
             disp_h = int((disp_w / pil_img.width) * pil_img.height)
             pil_resized = pil_img.resize((disp_w, disp_h), Image.Resampling.LANCZOS)
             
             tk_img = ImageTk.PhotoImage(pil_resized)
-            # Mantener referencia viva
             cv.image_ref = tk_img
-            cv.create_image(20, 20, anchor="nw", image=tk_img)
-            cv.config(scrollregion=(0, 0, disp_w + 40, disp_h + 40))
+            cv.create_image(15, 15, anchor="nw", image=tk_img)
+            cv.config(scrollregion=(0, 0, disp_w + 30, disp_h + 30))
         except Exception as err:
             cv.create_text(200, 100, text=f"No se pudo cargar la vista de imagen:\n{str(err)}", fill="red", font=("Segoe UI", 10))
 

@@ -41,9 +41,14 @@ class OMRBatchProcessor:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 sheet_code TEXT UNIQUE,
                 answers_json TEXT,
+                aligned_image_path TEXT,
                 scan_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        try:
+            cur.execute("ALTER TABLE answer_sheets ADD COLUMN aligned_image_path TEXT")
+        except sqlite3.OperationalError:
+            pass
         
         # Tabla de Calificaciones Consolidadas
         cur.execute("""
@@ -77,13 +82,13 @@ class OMRBatchProcessor:
         conn.commit()
         conn.close()
 
-    def register_answers(self, sheet_code, answers_dict):
+    def register_answers(self, sheet_code, answers_dict, aligned_img_path=None):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
-            INSERT OR REPLACE INTO answer_sheets (sheet_code, answers_json)
-            VALUES (?, ?)
-        """, (sheet_code, json.dumps(answers_dict)))
+            INSERT OR REPLACE INTO answer_sheets (sheet_code, answers_json, aligned_image_path)
+            VALUES (?, ?, ?)
+        """, (sheet_code, json.dumps(answers_dict), aligned_img_path))
         conn.commit()
         conn.close()
 
@@ -311,7 +316,13 @@ class OMRBatchProcessor:
                     b_ar = pyzbar.decode(aligned_r)
                     if b_ar: code_ans = b_ar[0].data.decode('utf-8')
                 if code_ans and answers:
-                    self.register_answers(code_ans, answers)
+                    # Guardar la imagen escaneada y alineada real para el auditor visual
+                    os.makedirs("scanned_alignments", exist_ok=True)
+                    safe_name = code_ans.replace("/", "_").replace("\\", "_")
+                    save_align_path = os.path.join("scanned_alignments", f"{safe_name}.png")
+                    cv2.imwrite(save_align_path, aligned_r)
+                    
+                    self.register_answers(code_ans, answers, aligned_img_path=save_align_path)
                     theme = answers.get("_THEME_", "SIN_TEMA")
                     print(f"   [Pág {page_idx+1}] Respuestas registradas: {code_ans} -> Tema: {theme}")
                     
