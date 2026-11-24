@@ -1,0 +1,7 @@
+# Evitar subir archivos gigantes o temporales a GitHub
+*.apk
+extracted_analysis/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
